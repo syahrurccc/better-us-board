@@ -3,8 +3,11 @@ import { fileURLToPath } from 'node:url';
 
 import express from 'express';
 
-import apiRouter from './routes/api';
+import authRouter from './routes/auth';
 import renderRouter from './routes/render';
+import connRouter from './routes/connections';
+import ticketsRouter from './routes/tickets';
+import notifRouter from './routes/notifications';
 
 const app = express();
 const port: number = 3000;
@@ -18,9 +21,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', renderRouter);
-app.use('/auth',);
-app.use('/connections',);
-app.use('/tickets');
-app.use('/notifications');
+app.use('/auth', authRouter);
+app.use('/connections', connRouter);
+app.use('/tickets', ticketsRouter);
+app.use('/notifications', notifRouter);
 
 app.listen(port);
