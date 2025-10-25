@@ -2,12 +2,13 @@ import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import express from 'express';
+import dotenv from 'dotenv';
 
 import authRouter from './routes/auth';
-import renderRouter from './routes/render';
 import connRouter from './routes/connections';
-import ticketsRouter from './routes/tickets';
 import notifRouter from './routes/notifications';
+import renderRouter from './routes/render';
+import ticketsRouter from './routes/tickets';
 
 const app = express();
 const port: number = 3000;
@@ -23,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', renderRouter);
 app.use('/auth', authRouter);
 app.use('/connections', connRouter);
-app.use('/tickets', ticketsRouter);
 app.use('/notifications', notifRouter);
+app.use('/tickets', ticketsRouter);
 
 app.listen(port);
