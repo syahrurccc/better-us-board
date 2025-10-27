@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import express from 'express';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 import authRouter from './routes/auth';
 import connRouter from './routes/connections';
@@ -14,6 +15,8 @@ const app = express();
 const port: number = 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+await mongoose.connect('mongodb://127.0.0.1:27017/betterus')
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
