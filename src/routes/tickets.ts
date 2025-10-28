@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { Ticket, Comment, Board } from '../db/schema';
+import { Ticket, Comment, Board } from '../models/schema';
 
 const router = Router();
 

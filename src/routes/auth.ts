@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 
-import { User } from '../db/schema';
+import { User } from '../models/schema';
 import { parse } from 'zod/mini';
 
 const router = Router();
