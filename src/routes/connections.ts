@@ -7,6 +7,7 @@ const router = Router();
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
 const inviteBodySchema = z.object({ inviteeId: objectId });
+const breakBodySchema = z.object({ partnerId: objectId });
 const acceptBodySchema = z.object({ 
   inviteId: objectId,
   response: z.boolean
@@ -100,7 +101,32 @@ router.post('/accept', async (req, res, next) => {
 });
 
 router.post('/break', async (req, res, next) => {
-  
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(401).json({ error: 'Invalid user' })
+    
+    const parsed = breakBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
+    }
+    const { partnerId } = parsed.data;
+    
+    const partner = await User.findById(partnerId);
+    if (!partner) return res.status(404).json({ error: 'Partner account does not exist' });
+    
+    if (!user.partnerId.equals(partnerId) && !partner.partnerId.equals(user._id)) {
+      return res.status(400).json({ error: "You are not this user's partner" })
+    }
+    
+    await Promise.all([
+      user.updateOne({ partnerId: null }),
+      partner.updateOne({ partnerId: null })
+    ]);
+    
+    return res.status(200).json({ message: 'Successfully breaking up' });
+  } catch (e: any) {
+    next(e);
+  }
 });
 
 export default router;
