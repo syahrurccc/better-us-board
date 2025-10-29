@@ -5,6 +5,8 @@ const boardSchema = new Schema({
   userIds: [{ type: mongoose.SchemaTypes.ObjectId, ref: 'User' }],
 }, { timestamps: true })
 
+boardSchema.index({ userIds: 1 }, { unique: true });
+
 const commentSchema = new Schema({
   ticketId: { type: mongoose.SchemaTypes.ObjectId, ref: 'Ticket', index: true },
   authorId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
@@ -13,11 +15,11 @@ const commentSchema = new Schema({
 
 const inviteSchema = new Schema({
   inviterId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
-  inviteeEmail: { type: String, required: true },
+  inviteeId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User', index: true },
   status: {
     type: String,
     enum: ['pending', 'accepted'],
-    default: 'open'
+    default: 'pending'
   },
 }, { timestamps: true });
 

@@ -1,30 +1,105 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { User, Invite } from '../models/schema';
+import { User, Invite, Board } from '../models/schema';
 
 const router = Router();
 
-const inviteSchema = z.object({
-  inviteeId: z.string().min(24).max(24)
-})
+const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
+const inviteBodySchema = z.object({ inviteeId: objectId });
+const acceptBodySchema = z.object({ 
+  inviteId: objectId,
+  response: z.boolean
+});
 
 router.post('/invite', async (req, res, next) => {
-  const parsedData = inviteSchema.safeParse(req.body);
-  
-  if (!parsedData.success) return res.status(400).json({ error: 'Invalid userId.' });
-  
-  const invitee = await User.findById(`${parsedData.data.inviteeId}`).lean();
-  
-  if (!invitee) return res.status(400).json({ error: 'No user found.' });
-  
-  await Invite.create({
-    inviterId: req.userId,
-    inviteeEmail: invitee.email,
-  });
+  try {
+    const inviter = await User.findById(req.userId).lean();
+    if (!inviter) return res.status(404).json({ error: 'Inviter not found' });
+    
+    if (inviter.partnerId !== null && inviter.partnerId !== undefined) {
+      return res.status(403).json({ error: 'You already have a partner' });
+    }
+    
+    const parsed = inviteBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
+    } 
+    const { inviteeId } = parsed.data; 
+   
+    const invitee = await User.findById(inviteeId).lean();
+    if (!invitee) return res.status(400).json({ error: 'No user found.' });
+    
+    if (invitee.partnerId !== null && invitee.partnerId !== undefined) {
+      return res.status(403).json({ error: 'User already have a partner' });
+    }
+    
+    const exists = await Invite.exists({
+      inviterId: req.userId,
+      inviteeId: invitee._id,
+      status: 'pending'
+    });
+    if (exists) {
+      return res.status(400).json({ error: 'An invite is already pending' });
+    }
+    
+    const invite = await Invite.create({
+      inviterId: req.userId,
+      inviteeId: invitee._id,
+    });
+    
+    return res.status(201).json(invite);
+  } catch (e: any) {
+    next(e);
+  } 
+});
+
+router.get('/request', async (req, res, next) => {
+  try {
+    const invites = await Invite.find({ inviteeId: req.userId });
+    return res.status(200).json({ invites });
+  } catch (e: any) {
+    next(e);
+  }
 });
 
 router.post('/accept', async (req, res, next) => {
+  try {
+    const parsed = acceptBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
+    }
+    const { inviteId, response } = parsed.data;
+    
+    const invite = await Invite.findById(inviteId);
+    if (!invite) return res.status(400).json({ error: 'No invite found' });
+    if (invite.status !== 'pending') {
+      return res.status(409).json({ error: "Invite already accepted/rejected" });
+    }
+    
+    if (!response) {
+      await invite.deleteOne();
+      return res.status(204).json({ message: 'Invite rejected' })
+    }
+    
+    await Promise.all([
+      Invite.findByIdAndUpdate(inviteId, { status: 'accepted' }),
+      User.findByIdAndUpdate(invite.inviterId, { partnerId: invite.inviteeId }),
+      User.findByIdAndUpdate(invite.inviteeId, { partnerId: invite.inviterId }),
+    ]);
+    
+    await Board.create({
+      name: 'Our Board',
+      userIds: [invite.inviterId, invite.inviteeId]
+    });
+    
+    return res.status(202).json({ message: 'Invite accepted' });
+  } catch (e: any) {
+    next(e);
+  }
+});
+
+router.post('/break', async (req, res, next) => {
   
 });
 

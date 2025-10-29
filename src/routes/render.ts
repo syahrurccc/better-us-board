@@ -14,8 +14,4 @@ router.get('/register', (_req, res) => {
   return res.render('register');
 });
 
-router.get('/board', (_req, res) => {
-  return res.render('board');
-});
-
 export default router;
