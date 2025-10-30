@@ -50,7 +50,7 @@ router.post('/invite', async (req, res, next) => {
     });
     
     return res.status(201).json(invite);
-  } catch (e: any) {
+  } catch (e) {
     next(e);
   } 
 });

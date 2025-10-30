@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import authRouter from './routes/auth';
+import boardRouter from './routes/board'
 import connRouter from './routes/connections';
 import healthRouter from './routes/health';
 import notifRouter from './routes/notifications';
@@ -38,6 +39,7 @@ export function createApp() {
   
   app.use('/', renderRouter);
   app.use('/auth', authRouter);
+  app.use('/board', boardRouter);
   app.use('/connections', connRouter);
   app.use('/health', healthRouter);
   app.use('/notifications', notifRouter);

@@ -11,7 +11,7 @@ const boardNameSchema = z.object({
   boardName: z.string().min(1)
 })
 
-router.get('/board', async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     if (!req.userId) return res.status(401).json({ error: 'You are not logged in' });
     
@@ -28,13 +28,13 @@ router.get('/board', async (req, res, next) => {
       });
     }
     
-    return res.status(200).json({ board });
+    return res.status(200).json(board);
   } catch (e: any) {
     next(e);
   }
 });
 
-router.post('/board', async (req, res, next) => {
+router.post('/', async (req, res, next) => {
   try {
     const parsed = boardNameSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -55,3 +55,5 @@ router.post('/board', async (req, res, next) => {
     next(e)
   }
 });
+
+export default router;

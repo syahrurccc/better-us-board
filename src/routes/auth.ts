@@ -21,10 +21,10 @@ const registerSchema = z.object({
   },  
 });
 
-const loginSchema = z.object ({
+const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(8)
-})
+}).strict();
 
 router.post('register', async (req, res, next) => {
   try {
