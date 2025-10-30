@@ -1,4 +1,10 @@
 import mongoose, { Schema } from "mongoose";
+import { z } from 'zod';
+
+export const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
+export const categories = ['communication', 'household', 'finance', 'wellbeing', 'other'] as const;
+export const priorities = ['low', 'medium', 'high'] as const;
+export const statuses = ['open', 'in_progress', 'resolved'] as const;
 
 const boardSchema = new Schema({
   name: { type: String, default: 'Our Board' },
@@ -27,20 +33,21 @@ const ticketSchema = new Schema({
   boardId: { type: mongoose.SchemaTypes.ObjectId, ref: 'Board', index: true },
   authorId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
   assigneeId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User', default: null },
-  description: String,
+  title: { type: String, required: true },
+  description: { type: String, default: null },
   category: {
     type: String,
-    enum: ['communication', 'household', 'finance', 'wellbeing', 'other'],
+    enum: categories,
     required: true
   },
   priority: {
     type: String,
-    enum: ['low', 'medium', 'high'],
+    enum: priorities,
     required: true
   },
   status: {
     type: String,
-    enum: ['open', 'in_progress', 'resolved'],
+    enum: statuses,
     default: 'open'
   },
 }, { timestamps: true });

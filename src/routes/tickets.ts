@@ -1,17 +1,13 @@
+// TODO: CREATE CONSISTENT ERROR HANDLING
+
 import { Router } from 'express';
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
 
 import { Ticket, Comment, Board, User } from '../models/schema';
+import { objectId, categories, priorities, statuses } from '../models/schema';
 
 const router = Router();
-
-const categories = ['communication', 'household', 'finance', 'wellbeing', 'other'] as const;
-const priorities = ['low', 'medium', 'high'] as const;
-const statuses = ['open', 'in_progress', 'resolved'] as const;
-type Category = typeof categories[number];
-type Priority = typeof priorities[number]
-type Status = typeof statuses[number];
 
 const asArray = <T extends readonly string[]>(choices: T) =>
   z.preprocess((v) => {
@@ -27,10 +23,12 @@ const ticketQuerySchema = z.object({
 })
 
 const ticketSchema = z.object({
+  boardId:     objectId,
+  assigneeId:  objectId.optional(),
   title:       z.string().min(3).trim(),
-  description: z.string().min(3).trim(),
-  category:    z.enum(['communication', 'household', 'finance', 'wellbeing', 'other']),
-  priority:    z.enum(['low', 'medium', 'high'])
+  description: z.string().min(3).trim().optional(),
+  category:    z.enum(categories),
+  priority:    z.enum(priorities)
 });
 
 const commentSchema = z.object({
@@ -68,7 +66,34 @@ router.get('/', async (req, res, next) => {
 });
 
 router.post('/', async (req, res, next) => {
-  
+  try {
+    const board = await Board.findOne({ userIds: req.userId }).lean();
+    if (!board) return res.status(303).redirect('/board');
+    
+    const parsed = ticketSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
+    }
+    const ticket = parsed.data;
+    
+    if (board._id.toString() !== ticket.boardId) {
+      return res.status(403).json({ error: 'Not authorized to send ticket to destined board' });
+    }
+    
+    await Ticket.create({
+      boardId: ticket.boardId,
+      authorId: req.userId,
+      assigneeId: ticket.assigneeId ?? null,
+      title: ticket.title,
+      description: ticket.description ?? null,
+      category: ticket.category,
+      priority: ticket.priority,
+    });
+    
+    return res.status(201);
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.get('/:id', async (req, res, next) => {
@@ -84,12 +109,19 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 router.get('/:id/comments', async (req, res, next) => {
-  
+  try {
+    const parsed = commentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
+    }
+    
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.post('/:id/comments', async (req, res, next) => {
   
 });
-
 
 export default router;

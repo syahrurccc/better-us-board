@@ -38,7 +38,6 @@ router.post('/invite', async (req, res, next) => {
     const exists = await Invite.exists({
       inviterId: req.userId,
       inviteeId: invitee._id,
-      status: 'pending'
     });
     if (exists) {
       return res.status(400).json({ error: 'An invite is already pending' });
@@ -114,7 +113,7 @@ router.post('/break', async (req, res, next) => {
     const partner = await User.findById(partnerId);
     if (!partner) return res.status(404).json({ error: 'Partner account does not exist' });
     
-    if (!user.partnerId.equals(partnerId) && !partner.partnerId.equals(user._id)) {
+    if (!user.partnerId.equals(partnerId) || !partner.partnerId.equals(user._id)) {
       return res.status(400).json({ error: "You are not this user's partner" })
     }
     
