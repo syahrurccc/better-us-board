@@ -20,7 +20,7 @@ router.get('/', async (req, res, next) => {
     
     if (!user.partnerId) return res.status(200).json(null);
     
-    let board = await Board.findOne({ userIds: user._id });
+    let board = await Board.findOne({ userIds: user._id }).lean();
     if (!board) board = await Board.create({ userIds: [user._id, user.partnerId] });
     
     return res.status(200).json(board);

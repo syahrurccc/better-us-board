@@ -28,7 +28,7 @@ const loginSchema = z.object({
 
 router.post('register', async (req, res, next) => {
   try {
-    const parsedData = registerSchema.parse(req.body);
+    const parsedData = await registerSchema.parseAsync(req.body);
 
     const hash = await bcrypt.hash(parsedData.password, 10);
     await User.create({
@@ -42,7 +42,7 @@ router.post('register', async (req, res, next) => {
   } catch (e: any) {
     console.log(e.messsage);
     if (e.code === 11000) {
-      return res.status(400).json({ error: 'User already exists. Please login.' });
+      return res.status(409).json({ error: 'User already exists. Please login.' });
     }
     return res.status(400).json({ error: e.message });
   }

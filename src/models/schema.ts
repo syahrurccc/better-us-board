@@ -31,8 +31,7 @@ const inviteSchema = new Schema({
 
 const ticketSchema = new Schema({
   boardId: { type: mongoose.SchemaTypes.ObjectId, ref: 'Board', index: true },
-  authorId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
-  assigneeId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User', default: null },
+  authorId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
   description: { type: String, default: null },
   category: {
@@ -51,6 +50,10 @@ const ticketSchema = new Schema({
     default: 'open'
   },
 }, { timestamps: true });
+
+ticketSchema.index({ boardId: 1, status: 1 });
+ticketSchema.index({ boardId: 1, priority: 1 });
+ticketSchema.index({ boardId: 1, category: 1 });
 
 const userSchema = new Schema({
   name: { type: String, required: true },
