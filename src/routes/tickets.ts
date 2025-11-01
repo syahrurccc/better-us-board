@@ -1,5 +1,3 @@
-// TODO: CREATE CONSISTENT ERROR HANDLING
-
 import { Router } from 'express';
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
@@ -54,14 +52,9 @@ async function findTicket(id: String) {
 router.get('/', async (req, res, next) => {
   try {
     const board = await Board.findOne({ userIds: req.userId }).lean();
-    if (!board) return res.status(303).redirect('/board');
+    if (!board) return res.status(404).json({ error: 'User has no board' })
     
-    const parsed = ticketQuerySchema.safeParse(req.query);
-    
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid status', details: parsed.error.flatten() });
-    }
-    const q = parsed.data;
+    const q = ticketQuerySchema.parse(req.query);
     
     const filter: FilterQuery<typeof Ticket> = { boardId: board._id };
     
@@ -92,15 +85,13 @@ router.post('/', async (req, res, next) => {
   try {
     const board = await Board.findOne({ userIds: req.userId }).lean();
     if (!board) return res.status(303).redirect('/board');
-    
-    const parsed = ticketSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
-    }
-    const ticket = parsed.data;
+
+    const ticket = ticketSchema.parse(req.body);
     
     if (board._id.toString() !== ticket.boardId) {
-      return res.status(403).json({ error: 'Not authorized to send ticket to destined board' });
+      return res.status(403).json({ 
+        error: 'Not authorized to send ticket to destined board' 
+      });
     }
     
     await Ticket.create({
@@ -176,7 +167,9 @@ router.delete('/:id', async (req, res, next) => {
     const ticket = await findTicket(req.params.id);
     
     if (ticket.authorId.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Not authorized to delete this ticket' });
+      return res.status(403).json({ 
+        error: 'Not authorized to delete this ticket' 
+      });
     }
     await ticket.deleteOne();
     

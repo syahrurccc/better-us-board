@@ -57,7 +57,7 @@ ticketSchema.index({ boardId: 1, category: 1 });
 
 const userSchema = new Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true},
   partnerId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User', default: null }
 });

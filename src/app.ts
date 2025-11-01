@@ -1,22 +1,21 @@
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
 import authRouter from './routes/auth';
-import boardRouter from './routes/board'
-import connRouter from './routes/connections';
+import boardRouter from './routes/board';
+import connRouter from './routes/connections'
 import healthRouter from './routes/health';
-import notifRouter from './routes/notifications';
 import renderRouter from './routes/render';
 import ticketsRouter from './routes/tickets';
 import { devIdentity } from './middlewares/dev';
 import { notFound } from './middlewares/notFound';
 import { errorHandler } from './middlewares/error';
-import { env } from './config/env';
 
 export function createApp() {
   const app = express();
@@ -27,13 +26,14 @@ export function createApp() {
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, 'views'));
   
+  app.use(cookieParser());
   app.use(cors());
   app.use(express.json());
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(helmet());
   app.use(morgan('dev'));
   
-  if (env.DEV_FAKE_AUTH) {
+  if (process.env.DEV_FAKE_AUTH) {
     app.use(devIdentity);
   }
   
@@ -42,7 +42,6 @@ export function createApp() {
   app.use('/board', boardRouter);
   app.use('/connections', connRouter);
   app.use('/health', healthRouter);
-  app.use('/notifications', notifRouter);
   app.use('/tickets', ticketsRouter);
   
   app.use(notFound);

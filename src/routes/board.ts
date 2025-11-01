@@ -1,20 +1,19 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { Board, User } from '../models/schema';
+import { Board, User, objectId } from '../models/schema';
+import { requireAuth } from '../middlewares/requireAuth';
+
 
 const router = Router();
 
-const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
 const boardNameSchema = z.object({
   boardId: objectId,
   boardName: z.string().min(1)
 })
 
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
-    if (!req.userId) return res.status(401).json({ error: 'You are not logged in' });
-    
     const user = await User.findById(req.userId).lean();
     if (!user) return res.status(400).json({ error: 'No user found' });
     
@@ -29,14 +28,9 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', requireAuth, async (req, res, next) => {
   try {
-    const parsed = boardNameSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid body', details: parsed.error.flatten() });
-    }
-    
-    const { boardId, boardName } = parsed.data;
+    const { boardId, boardName } = boardNameSchema.parse(req.body);
     
     const board = await Board.findById(boardId);
     if (!board) return res.status(404).json({ error: 'Board not found' });
