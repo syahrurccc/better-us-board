@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600&display=swap');
+
+@tailwind utilities;
+
+/* --- Custom Theme Tokens --- */
+@layer base {
+  :root {
+    --color-peach-light: #FFE5D9;
+    --color-peach: #FFBFA9;
+    --color-peach-dark: #FF9B7A;
+
+    --font-display: "Poppins", sans-serif;
+    --font-body: "Inter", sans-serif;
+  }
+
+  body {
+    @apply font-[var(--font-body)] bg-[var(--color-peach-light)] text-gray-800;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-[var(--font-display)];
+  }
+}
+
+/* --- Optional reusable utilities --- */
+@layer components {
+  .btn {
+    @apply inline-block px-6 py-2 font-semibold rounded-lg transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-[var(--color-peach-dark)] text-white hover:bg-[var(--color-peach)];
+  }
+
+  .btn-outline {
+    @apply border-2 border-[var(--color-peach-dark)] text-[var(--color-peach-dark)] hover:bg-[var(--color-peach-dark)] hover:text-white;
+  }
+}
+

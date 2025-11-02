@@ -1,0 +1,27 @@
+<%- include('includes/head', { title: 'Better Us' }) %>
+<%- include('includes/header') %>
+
+<main class="flex flex-col items-center justify-center flex-grow text-center px-4">
+  <h1 class="text-5xl md:text-6xl font-display font-bold text-peach-dark mb-6">
+    Better&nbsp;Us.
+  </h1>
+
+  <p class="text-gray-600 mb-10 max-w-md">
+    A shared space to voice, reflect, and resolve — together.
+  </p>
+
+  <div class="flex gap-4">
+    <a href="/login"
+       class="px-6 py-2 border-2 border-peach-dark rounded-lg text-peach-dark font-semibold
+              hover:bg-peach-dark hover:text-white transition-colors duration-200">
+      Login
+    </a>
+    <a href="/register"
+       class="px-6 py-2 bg-peach-dark text-white font-semibold rounded-lg
+              hover:bg-peach text-gray-900 transition-colors duration-200">
+      Register
+    </a>
+  </div>
+</main>
+
+<%- include('includes/footer') %>

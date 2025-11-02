@@ -13,7 +13,6 @@ import connRouter from './routes/connections'
 import healthRouter from './routes/health';
 import renderRouter from './routes/render';
 import ticketsRouter from './routes/tickets';
-import { devIdentity } from './middlewares/dev';
 import { notFound } from './middlewares/notFound';
 import { errorHandler } from './middlewares/error';
 
@@ -32,10 +31,6 @@ export function createApp() {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(helmet());
   app.use(morgan('dev'));
-  
-  if (process.env.DEV_FAKE_AUTH) {
-    app.use(devIdentity);
-  }
   
   app.use('/', renderRouter);
   app.use('/auth', authRouter);
