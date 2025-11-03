@@ -46,6 +46,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 router.post('/login', async (req, res, next) => {
+  console.log(req.body)
   try {
     const { email, password } = loginSchema.parse(req.body);
     

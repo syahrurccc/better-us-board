@@ -15,14 +15,16 @@ const boardNameSchema = z.object({
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findById(req.userId).lean();
-    if (!user) return res.status(400).json({ error: 'No user found' });
+    if (!user) return res.status(401).json({ error: 'No user found' });
     
-    if (!user.partnerId) return res.status(200).json(null);
+    if (!user.partnerId) {
+      return res.status(200).json({ username: user.name, board: null});
+    } 
     
     let board = await Board.findOne({ userIds: user._id }).lean();
     if (!board) board = await Board.create({ userIds: [user._id, user.partnerId] });
     
-    return res.status(200).json(board);
+    return res.status(200).json({ username: user.name, board });
   } catch (e: any) {
     next(e);
   }

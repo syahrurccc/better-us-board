@@ -3,7 +3,7 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/', (req, res) => {
-  return req.userId ? res.render('board', { title: 'Board' }) : res.render('index', { title: 'Board' });
+  return req.cookies.jwt ? res.render('board', { title: 'Board' }) : res.render('index', { title: 'Board' });
 });
 
 router.get('/login', (_req, res) => {
