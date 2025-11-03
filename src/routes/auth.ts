@@ -73,7 +73,7 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-router.get('/logout', (req, res, next) => {
+router.get('/logout', (_req, res) => {
   res.clearCookie('jwt', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

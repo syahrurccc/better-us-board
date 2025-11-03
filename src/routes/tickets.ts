@@ -1,9 +1,10 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
 
 import { Ticket, Comment, Board} from '../models/schema';
 import { categories, priorities, statuses, objectId } from '../models/schema';
+import { requireAuth } from '../middlewares/requireAuth';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const ticketQuerySchema = z.object({
   category: asArray(categories),
   priority: asArray(priorities),
   status: asArray(statuses),
+  archived: z.coerce.boolean().optional()
 }).strict();
 
 const ticketSchema = z.object({
@@ -49,7 +51,7 @@ async function findTicket(id: String) {
   return ticket;
 }
 
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     const board = await Board.findOne({ userIds: req.userId }).lean();
     if (!board) return res.status(404).json({ error: 'User has no board' })
@@ -59,11 +61,13 @@ router.get('/', async (req, res, next) => {
     const filter: FilterQuery<typeof Ticket> = { boardId: board._id };
     
     if (Object.keys(q).length === 0) {
-      filter.status = { $in: ['open', 'in_progress'] };
+      filter.status = { $in: statuses };
+      filter.archived = false;
     } else {
       if (q.status)   filter.status   = q.status.length   === 1 ? q.status[0]   : { $in: q.status };
       if (q.priority) filter.priority = q.priority.length === 1 ? q.priority[0] : { $in: q.priority };
       if (q.category) filter.category = q.category.length === 1 ? q.category[0] : { $in: q.category };
+      if (q.archived) filter.archived = q.archived;
     }
     
     const tickets = await Ticket.find(
@@ -81,7 +85,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', requireAuth, async (req, res, next) => {
   try {
     const board = await Board.findOne({ userIds: req.userId }).lean();
     if (!board) return res.status(303).redirect('/board');
@@ -109,7 +113,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const ticketId = objectId.parse(req.params.id);
     
@@ -126,7 +130,9 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', 
+  requireAuth, 
+  async (req: Request<{ id: string }>, res, next) => {
   try {
     const ticket = await findTicket(req.params.id);
     
@@ -162,7 +168,9 @@ router.patch('/:id', async (req, res, next) => {
   }
 });
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', 
+  requireAuth, 
+  async (req: Request<{ id: string }>, res, next)  => {
   try {
     const ticket = await findTicket(req.params.id);
     
@@ -179,7 +187,9 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
-router.post('/:id/comments', async (req, res, next) => {
+router.post('/:id/comments', 
+  requireAuth, 
+  async (req: Request<{ id: string }>, res, next) => {
   try {
     const ticket = await findTicket(req.params.id);
     
@@ -190,6 +200,10 @@ router.post('/:id/comments', async (req, res, next) => {
       authorId: req.userId,
       body: body
     });
+    
+    if (ticket.authorId.toString() !== req.userId) {
+      await ticket.updateOne({ status: 'in_progress' });
+    }
     
     res.status(201).json(comment);
   } catch (e) {
