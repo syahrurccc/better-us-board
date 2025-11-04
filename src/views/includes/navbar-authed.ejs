@@ -1,17 +1,16 @@
 <nav class="sticky top-0 z-50 w-full border-b border-black/10 bg-white/70 backdrop-blur-md">
-  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+<div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
     <a href="/" class="font-semibold tracking-tight text-lg sm:text-xl">
-      Better <span class="font-extrabold">Us</span>.
+    Better <span class="font-extrabold">Us</span>.
     </a>
 
     <div class="flex items-center gap-4 text-sm">
-      <span class="hidden sm:inline" id="username"></span>
-      <form action="/auth/logout" method="get">
-        <button
-          class="rounded-full border border-black px-4 py-2 font-medium text-black transition hover:bg-black hover:text-white">
-          Logout
-        </button>
-      </form>
+    <span class="hidden sm:inline" id="username"></span>
+    <button
+        id="logoutBtn"
+        class="rounded-full border border-black px-4 py-2 font-medium text-black transition hover:bg-black hover:text-white">
+        Logout
+    </button>
     </div>
-  </div>
+</div>
 </nav>

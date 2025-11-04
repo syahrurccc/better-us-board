@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId');
 export const categories = ['communication', 'household', 'finance', 'wellbeing', 'other'] as const;
 export const priorities = ['low', 'medium', 'high'] as const;
-export const statuses = ['open', 'in_progress', 'need_reflection', 'resolved'] as const;
+export const statuses = ['open', 'in_progress', 'needs_reflection', 'resolved'] as const;
 
 const boardSchema = new Schema({
   name: { type: String, default: 'Our Board' },

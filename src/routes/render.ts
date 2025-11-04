@@ -3,6 +3,7 @@ import { Router } from 'express';
 const router = Router();
 
 router.get('/', (req, res) => {
+  console.log(req.cookies.jwt);
   return req.cookies.jwt ? res.render('board', { title: 'Board' }) : res.render('index', { title: 'Board' });
 });
 

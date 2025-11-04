@@ -75,7 +75,6 @@ router.get('/', requireAuth, async (req, res, next) => {
       { category: 0, description: 0, createdAt: 0 }
     )
     .populate('authorId', 'name')
-    .select('title')
     .sort({ updatedAt: -1 })
     .lean();
     

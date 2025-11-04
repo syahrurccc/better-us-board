@@ -1,8 +1,9 @@
 <%- include('includes/head', { title: 'Login — Better Us' }) %>
-<%- include('includes/navbar') %>
 
+<script src="/js/auth.js"></script>
 </head>
 <body class="min-h-dvh bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
+<%- include('includes/navbar') %>
 <main class="relative hero-bg">
   <div class="absolute inset-0 bg-white/60"></div>
   <section class="relative mx-auto flex min-h-[85svh] max-w-xl items-center px-4">
@@ -14,7 +15,7 @@
         </p>
       </header>
 
-      <form id="loginForm" class="space-y-5" action="/auth/login" method="post">
+      <form id="loginForm" class="space-y-5">
         <div>
           <label for="email" class="block text-sm font-medium">Email</label>
           <input
@@ -45,6 +46,7 @@
         <div class="mt-6 flex items-center justify-between">
           <a href="/register" class="text-sm underline-offset-4 hover:underline">Create an account</a>
           <button
+            id="loginButton"
             type="submit"
             class="rounded-full border border-black px-6 py-3 text-sm font-medium text-black transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black"
           >

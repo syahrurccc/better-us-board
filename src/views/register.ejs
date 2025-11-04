@@ -14,7 +14,7 @@
         </p>
       </header>
 
-      <form id="registerForm" class="space-y-5" action="/auth/register" method="post>
+      <form id="registerForm" class="space-y-5">
         <div>
           <label for="name" class="block text-sm font-medium">Name</label>
           <input
@@ -73,7 +73,8 @@
         <div class="mt-6 flex items-center justify-between">
           <a href="/login" class="text-sm underline-offset-4 hover:underline">Already have an account?</a>
           <button
-            type="button"
+            id="registerButton"
+            type="submit"
             class="rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
           >
             Register
