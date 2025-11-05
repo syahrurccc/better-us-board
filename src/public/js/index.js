@@ -4,17 +4,131 @@ const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 document.addEventListener('DOMContentLoaded', () => {
   
   fetchBoard();
+  fetchInvites();
   qs('#logoutBtn').addEventListener('click', () => logout());
+  qs('#inviteForm')?.addEventListener('submit', invite);
+  qs('#userMenuBtn')?.addEventListener('click', () => toggleMenu());
+  qs('#openInvites')?.addEventListener('click', async () => {
+    qs('#menuMain').classList.add('hidden');
+    qs('#invitesView').classList.remove('hidden');
+    await fetchInvites();
+  });
+  qs('#backToMenu').addEventListener('click', () => {
+    qs('#menuMain').classList.remove('hidden');
+    qs('#invitesView').classList.add('hidden');
+  });
 
 });
 
-async function logout() {
-  try {
-    const res = await fetch('/auth/logout');
-    if (res.ok) {
-      window.location.href = '/';
-      return;
+function toggleMenu() {
+  const menu = qs('#userMenu');
+  const menuBtn = qs('#userMenuBtn');
+  const menuMain = qs('#menuMain');
+  const invitesView = qs('#invitesView');
+  
+  const isHidden = menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !isHidden);
+  if (isHidden) {
+    menuMain.classList.remove('hidden');
+    invitesView.classList.add('hidden');
+  }
+  
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target) && !menuBtn.contains(e.target)) {
+      menu.classList.add('hidden');
     }
+  });
+}
+
+async function fetchInvites() {
+  try {
+    const res = await fetch('/connections/requests', {
+      credentials: 'include'
+    });
+    const invites = res.ok ? await res.json() : [];
+    
+    const listEl = qs('#invitesList');
+    listEl.innerHTML = '';
+    qs('#noInvites').classList.toggle('hidden', invites.length > 0);
+    invites.forEach(inv => {
+      listEl.append(renderInvite(inv));
+    });
+  } catch (e) {
+    console.log(e.message)
+  }
+}
+
+function renderInvite(invite){
+  const li = document.createElement('li');
+  li.className = 'flex items-center justify-between rounded-xl border border-black/10 px-4 py-3';
+
+  const name = document.createElement('span');
+  name.className = 'font-medium';
+  name.textContent = invite.inviterId.name;
+
+  const actions = document.createElement('div');
+  actions.className = 'flex items-center gap-2';
+
+  const accept = document.createElement('button');
+  accept.className = 'rounded-full bg-green-500 px-3 py-1 text-white';
+  accept.textContent = '✓';
+  accept.addEventListener('click', () => respondInvite(invite._id, true));
+
+  const reject = document.createElement('button');
+  reject.className = 'rounded-full bg-red-500 px-3 py-1 text-white';
+  reject.textContent = '✕';
+  reject.addEventListener('click', () => respondInvite(invite._id, false));
+
+  actions.append(accept, reject);
+  li.append(name, actions);
+  return li;
+}
+
+async function respondInvite(id, response) {
+  try {
+    const payload = {
+      inviteId: id,
+      response
+    };
+    
+    const res = await fetch('/connections/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+    
+    // TODO: The json has a success message, create it later
+    
+    setTimeout(() => { location.href = '/'; }, 3000);
+  } catch (e) {
+    console.log(e.message)
+  }
+}
+
+
+async function invite(event) {
+  event.preventDefault();
+  const f = event.currentTarget;
+  const payload = { 
+    inviteeEmail: f.value.partnerEmail.trim() 
+  };
+  
+  if (!payload.inviteeEmail) return;
+  
+  try {
+    const res = await fetch('/connections/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json(); 
+    if (!res.ok) throw new Error(data.error);
+    
+    console.log(data.message);
   } catch (e) {
     console.log(e.message);
   }
@@ -29,16 +143,28 @@ async function fetchBoard() {
       return;
     } 
     
-    const { username, board } = data;
+    const { username, inviteCount, board } = data;
     
     qs('#emptyBoard').classList.toggle('hidden', board);
     qs('#activeBoard').classList.toggle('hidden', !board);
     
-    qs('#username').textContent = `Hi! ${username}`;
+    qs('#username').textContent = `Hi, ${username}!`;
+    setBadge(inviteCount);
+    
     if (board) await renderActiveBoard();
   } catch (e) {
     console.error(e.message);
   }
+}
+
+function setBadge(count) {
+  const show = count > 0;
+  [qs('#inviteBadge'), qs('#inviteBadgeInside')]
+    .forEach(b => {
+    if (!b) return;
+    b.textContent = String(count);
+    b.classList.toggle('hidden', !show);
+  });
 }
 
 async function renderActiveBoard(board) {
@@ -103,7 +229,7 @@ async function renderActiveBoard(board) {
   }
 }
 
-function buildCardContainer(statuses) {
+function buildCardContainer(status) {
   const cardContainer = document.createElement('div');
   cardContainer.classList = [
     'flex min-w-[260px] flex-col rounded-2xl',
@@ -111,9 +237,9 @@ function buildCardContainer(statuses) {
   ].join(' ');
   cardContainer.innerHTML = `
     <h2 class="mb-3 text-lg font-semibold tracking-wide">
-    ${capitalize(s)}
+    ${capitalize(status)}
     </h2>
-    <div id="${s}CardsContainer" class="space-y-3"></div>`
+    <div id="${status}CardsContainer" class="space-y-3"></div>`
   
   return cardContainer;
 }
@@ -141,4 +267,16 @@ function buildTickets(ticket) {
       </div>`
   
   return ticketEl;
+}
+
+async function logout() {
+  try {
+    const res = await fetch('/auth/logout');
+    if (res.ok) {
+      window.location.href = '/';
+      return;
+    }
+  } catch (e) {
+    console.log(e.message);
+  }
 }

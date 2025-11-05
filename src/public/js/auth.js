@@ -14,7 +14,7 @@ async function register(event) {
     email: f.email.value.trim(),
     password: f.password.value,
     confirmation: f.confirmation.value
-  }
+  };
   
   if (!payload.name || !payload.email || !payload.password || !payload.confirmation) return;
   

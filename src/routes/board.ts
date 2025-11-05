@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { Board, User, objectId } from '../models/schema';
+import { Board, User, Invite, objectId } from '../models/schema';
 import { requireAuth } from '../middlewares/requireAuth';
 
 
@@ -24,7 +24,13 @@ router.get('/', requireAuth, async (req, res, next) => {
     let board = await Board.findOne({ userIds: user._id }).lean();
     if (!board) board = await Board.create({ userIds: [user._id, user.partnerId] });
     
-    return res.status(200).json({ username: user.name, board });
+    const inviteCount = await Invite.countDocuments({ inviteeId: user._id });
+    
+    return res.status(200).json({ 
+      username: user.name, 
+      inviteCount, 
+      board,
+    });
   } catch (e: any) {
     next(e);
   }

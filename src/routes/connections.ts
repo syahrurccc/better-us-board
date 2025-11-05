@@ -41,22 +41,27 @@ router.post('/invite', requireAuth, async (req, res, next) => {
       inviteeId: invitee._id,
     });
     
-    return res.status(201).json(invite);
+    return res.status(201).json({ message: 'Invite sent' });
   } catch (e) {
     next(e);
   } 
 });
 
-router.get('/request', requireAuth, async (req, res, next) => {
+router.get('/requests', requireAuth, async (req, res, next) => {
   try {
-    const invites = await Invite.find({ inviteeId: req.userId });
-    return res.status(200).json({ invites });
-  } catch (e: any) {
+    const invites = await Invite.find({ 
+      inviteeId: req.userId 
+    })
+    .populate('inviterId', 'name')
+    .lean();
+    
+    return res.status(200).json(invites);
+  } catch (e) {
     next(e);
   }
 });
 
-router.post('/accept', requireAuth, async (req, res, next) => {
+router.post('/respond', requireAuth, async (req, res, next) => {
   try {
     const { inviteId, response } = acceptBodySchema.parse(req.body);
     
