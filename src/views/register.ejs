@@ -1,23 +1,24 @@
 <%- include('includes/head', { title: 'Register — Better Us' }) %>
-<%- include('includes/navbar') %>
 
+<script src="/js/auth.js"></script>
 </head>
 <body class="min-h-dvh bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
+<%- include('includes/navbar') %>
 <main class="relative hero-bg">
-  <div class="absolute inset-0 bg-white/60"></div>
-  <section class="relative mx-auto flex min-h-[85svh] max-w-xl items-center px-4">
+<div class="absolute inset-0 bg-white/60"></div>
+<section class="relative mx-auto flex min-h-[85svh] max-w-xl items-center px-4">
     <div class="w-full rounded-2xl border border-black/10 bg-white/90 p-6 shadow-sm sm:p-8">
-      <header class="mb-6 text-center">
+    <header class="mb-6 text-center">
         <h1 class="text-3xl font-extrabold">Create your account</h1>
         <p class="mt-2 text-gray-700">
-          A shared kanban board for two people to voice, reflect, and resolve—together.
+        A shared kanban board for two people to voice, reflect, and resolve—together.
         </p>
-      </header>
+    </header>
 
-      <form id="registerForm" class="space-y-5">
+    <form id="registerForm" class="space-y-5">
         <div>
-          <label for="name" class="block text-sm font-medium">Name</label>
-          <input
+        <label for="name" class="block text-sm font-medium">Name</label>
+        <input
             id="name"
             name="name"
             type="text"
@@ -25,26 +26,26 @@
             minlength="3"
             autocomplete="name"
             placeholder="Your name"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div>
-          <label for="email" class="block text-sm font-medium">Email</label>
-          <input
+        <label for="email" class="block text-sm font-medium">Email</label>
+        <input
             id="email"
             name="email"
             type="email"
             required
             autocomplete="email"
             placeholder="you@example.com"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium">Password</label>
-          <input
+        <label for="password" class="block text-sm font-medium">Password</label>
+        <input
             id="password"
             name="password"
             type="password"
@@ -52,13 +53,13 @@
             minlength="8"
             autocomplete="new-password"
             placeholder="********"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div>
-          <label for="confirmation" class="block text-sm font-medium">Confirm Password</label>
-          <input
+        <label for="confirmation" class="block text-sm font-medium">Confirm Password</label>
+        <input
             id="confirmation"
             name="confirmation"
             type="password"
@@ -66,23 +67,23 @@
             minlength="8"
             autocomplete="new-password"
             placeholder="********"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div class="mt-6 flex items-center justify-between">
-          <a href="/login" class="text-sm underline-offset-4 hover:underline">Already have an account?</a>
-          <button
+        <a href="/login" class="text-sm underline-offset-4 hover:underline">Already have an account?</a>
+        <button
             id="registerButton"
             type="submit"
-            class="rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
-          >
+            class="rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-black"
+        >
             Register
-          </button>
+        </button>
         </div>
-      </form>
+    </form>
     </div>
-  </section>
+</section>
 </main>
 
 <%- include('includes/footer') %>

@@ -5,33 +5,33 @@
 <body class="min-h-dvh bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
 <%- include('includes/navbar') %>
 <main class="relative hero-bg">
-  <div class="absolute inset-0 bg-white/60"></div>
-  <section class="relative mx-auto flex min-h-[85svh] max-w-xl items-center px-4">
+<div class="absolute inset-0 bg-white/60"></div>
+<section class="relative mx-auto flex min-h-[85svh] max-w-xl items-center px-4">
     <div class="w-full rounded-2xl border border-black/10 bg-white/90 p-6 shadow-sm sm:p-8">
-      <header class="mb-6 text-center">
+    <header class="mb-6 text-center">
         <h1 class="text-3xl font-extrabold">Login</h1>
         <p class="mt-2 text-gray-700">
-          Welcome back to your shared space.
+        Welcome back to your shared space.
         </p>
-      </header>
+    </header>
 
-      <form id="loginForm" class="space-y-5">
+    <form id="loginForm" class="space-y-5">
         <div>
-          <label for="email" class="block text-sm font-medium">Email</label>
-          <input
+        <label for="email" class="block text-sm font-medium">Email</label>
+        <input
             id="email"
             name="email"
             type="email"
             required
             autocomplete="email"
             placeholder="you@example.com"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-medium">Password</label>
-          <input
+        <label for="password" class="block text-sm font-medium">Password</label>
+        <input
             id="password"
             name="password"
             type="password"
@@ -39,23 +39,23 @@
             minlength="8"
             autocomplete="current-password"
             placeholder="********"
-            class="mt-1 w-full rounded-xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
-          />
+            class="mt-1 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
+        />
         </div>
 
         <div class="mt-6 flex items-center justify-between">
-          <a href="/register" class="text-sm underline-offset-4 hover:underline">Create an account</a>
-          <button
+        <a href="/register" class="text-sm underline-offset-4 hover:underline">Create an account</a>
+        <button
             id="loginButton"
             type="submit"
-            class="rounded-full border border-black px-6 py-3 text-sm font-medium text-black transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black"
-          >
+            class="rounded-full border border-black px-6 py-3 text-sm font-medium text-black transition hover:bg-black hover:text-white hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
+        >
             Login
-          </button>
+        </button>
         </div>
-      </form>
+    </form>
     </div>
-  </section>
+</section>
 </main>
 
 <%- include('includes/footer') %>

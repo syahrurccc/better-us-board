@@ -75,7 +75,7 @@ router.get('/', requireAuth, async (req, res, next) => {
       { category: 0, description: 0, createdAt: 0 }
     )
     .populate('authorId', 'name')
-    .sort({ updatedAt: -1 })
+    .sort({ createdAt: -1 })
     .lean();
     
     res.status(200).json(tickets);
@@ -121,7 +121,12 @@ router.get('/:id', requireAuth, async (req, res, next) => {
     ).populate('authorId', 'name').lean();
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
     
-    const comments = await Comment.find({ ticketId: ticket._id });
+    const comments = await Comment.find({ 
+      ticketId: ticket._id 
+    })
+    .populate('authorId', 'name')
+    .sort({ createdAt: -1 })
+    .lean();
     
     return res.status(200).json({ ticket, comments });
   } catch (e) {

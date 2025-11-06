@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function register(event) {
-  
+  console.log('hello');
   event.preventDefault();
   const f = event.currentTarget;
   const payload = {

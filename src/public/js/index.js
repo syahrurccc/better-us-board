@@ -54,7 +54,7 @@ async function fetchInvites() {
       listEl.append(renderInvite(inv));
     });
   } catch (e) {
-    console.log(e.message)
+    console.log(e.message);
   }
 }
 
@@ -101,6 +101,7 @@ async function respondInvite(id, response) {
     if (!res.ok) throw new Error(result.error);
     
     // TODO: The json has a success message, create it later
+    console.log(result.message);
     
     setTimeout(() => { location.href = '/'; }, 3000);
   } catch (e) {
@@ -108,12 +109,12 @@ async function respondInvite(id, response) {
   }
 }
 
-
 async function invite(event) {
+  console.log('clicked');
   event.preventDefault();
   const f = event.currentTarget;
   const payload = { 
-    inviteeEmail: f.value.partnerEmail.trim() 
+    inviteeEmail: f.partnerEmail.value.trim() 
   };
   
   if (!payload.inviteeEmail) return;
@@ -134,9 +135,22 @@ async function invite(event) {
   }
 }
 
+function setBadge(count) {
+  const show = count > 0;
+  [qs('#inviteBadge'), qs('#inviteBadgeInside')]
+    .forEach(b => {
+    if (!b) return;
+    b.textContent = String(count);
+    b.classList.toggle('hidden', !show);
+  });
+}
+
 async function fetchBoard() {
   try {
-    const res = await fetch('/board');
+    const res = await fetch('/board', {
+      method: 'GET',
+      credentials: 'include'
+    });
     const data = await res.json();
     if (!res.ok) {
       window.location.href = '/';
@@ -157,54 +171,22 @@ async function fetchBoard() {
   }
 }
 
-function setBadge(count) {
-  const show = count > 0;
-  [qs('#inviteBadge'), qs('#inviteBadgeInside')]
-    .forEach(b => {
-    if (!b) return;
-    b.textContent = String(count);
-    b.classList.toggle('hidden', !show);
-  });
-}
-
 async function renderActiveBoard(board) {
-  const activeBoard = qs('#activeBoard');
-  const statuses = ['open', 'in_progress', 'needs_reflection', 'resolved'];
-  
-  const header = document.createElement('header');
-  header.classList = [
-    'mb-8 flex flex-col items-start justify-between',
-    'gap-4 sm:flex-row sm:items-center'
-  ].join(' ');
-  header.innerHTML = `
-    <div class="space-y-1">
-      <p class="text-sm uppercase tracking-wide text-gray-600">Board Name</p>
-      <h1 class="text-2xl font-bold" id="boardName">${board.title}</h1>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button class="rounded-full border border-black 
-      px-5 py-2 text-sm font-medium text-black transition 
-      hover:bg-black hover:text-white">
-        + New Card
-      </button>
-    </div>`
-  
-  activeBoard.append(header);
-  statuses.forEach((s) => {
-    const cardContainer = buildCardContainer(s);
-    activeBoard.append(cardContainer);
-  });
+  const boardName = qs('#boardName');
+  boardName.textContent = `${board.title}`;
   
   const cards = {
-    open: qs('#openCardsContainer'),
-    in_progress: qs('#in_progressCardsContainer'),
-    need_reflection: qs('#needs_reflectionCardsContainer'),
-    resolved: qs('#resolvedCardsContainer'),
+    open: qs('#openTickets'),
+    in_progress: qs('#in_progressTickets'),
+    need_reflection: qs('#needs_reflectionTickets'),
+    resolved: qs('#resolvedTickets'),
   }
   
   try {
-    const res = await fetch('/tickets');
+    const res = await fetch('/tickets', {
+      method: 'GET',
+      credentials: 'include'
+    });
     const tickets = await res.json();
     
     if (!res.ok) {
@@ -214,7 +196,7 @@ async function renderActiveBoard(board) {
     if (tickets.length === 0) return;
     
     tickets.forEach(t => {
-      const ticket = buildTickets(t);
+      const ticket = buildTicketCards(t);
       const container = cards[t.status];
       
       if (container) {
@@ -229,22 +211,7 @@ async function renderActiveBoard(board) {
   }
 }
 
-function buildCardContainer(status) {
-  const cardContainer = document.createElement('div');
-  cardContainer.classList = [
-    'flex min-w-[260px] flex-col rounded-2xl',
-    'border border-black/10 bg-white p-4'
-  ].join(' ');
-  cardContainer.innerHTML = `
-    <h2 class="mb-3 text-lg font-semibold tracking-wide">
-    ${capitalize(status)}
-    </h2>
-    <div id="${status}CardsContainer" class="space-y-3"></div>`
-  
-  return cardContainer;
-}
-
-function buildTickets(ticket) {
+function buildTicketCards(ticket) {
   const ticketEl = document.createElement('div');
   
   const getPriorityClasses = (priority) => {
@@ -266,17 +233,101 @@ function buildTickets(ticket) {
           </span>
       </div>`
   
+  ticket.addEventListener('click', () => loadTicket(ticket._id));
+  
   return ticketEl;
 }
 
-async function logout() {
-  try {
-    const res = await fetch('/auth/logout');
-    if (res.ok) {
-      window.location.href = '/';
-      return;
-    }
+async function loadTicket(ticketId) {
+  try { 
+    const res = await fetch(`/tickets/${ticketId}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error);
+    
+    const { ticket, comments } = data;
+    
+    qs('#activeBoard').classList.add('hidden');
+    qs('#ticketView').classList.remove('hidden');
+    
+    renderTicketView(ticket, comments);
   } catch (e) {
     console.log(e.message);
   }
+}
+
+function renderTicketView(ticket, comments) {
+  qs('#ticketIssuer').textContent = ticket.authorId.name;
+  qs('#ticketCategory').textContent = ticket.category;
+  const priority = ticket.priority;
+  qs('#ticketPriority').textContent = priority;
+  const getPriorityClasses = (priority) => {
+      if (priority === 'high')   return 'h-3 w-3 rounded-full bg-red-400';
+      if (priority === 'medium') return 'h-3 w-3 rounded-full bg-yellow-400';
+      return 'h-3 w-3 rounded-full bg-green-400';
+  };
+  qs('#ticketPriorityDot').classList = getPriorityClasses(priority);
+  
+  const commentList = qs('#commentsList');
+  comments.forEach(c => {
+    const comment = renderComment(c);
+    commentList.append(comment);
+  });
+  
+  qs('#commentForm').addEventListener('submit', (e) => sendComment(e, ticket._id));
+  qs('#backToBoard').onclick = () => { location.href = '/'; };
+}
+
+async function sendComment(event, ticketId) {
+  event.preventDefault();
+  const f = event.currentTarget;
+  const payload = {
+    body: f.body.value.trim()
+  };
+  
+  try {
+    const res = await fetch(`/${ticketId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+    
+    const { comment } = result;
+    const li = renderComment(comment);
+    
+    qs('#commentsList').append(li);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function renderComment(c) {
+  const formatDate = (date) => 
+    new Date(date).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  
+  const comment = document.createElement('li');
+  comment.classList = 'border-t border-black/10 pt-4';
+  comment.innerHTML`
+    <div class="flex items-baseline justify-between">
+        <p class="font-medium">${c.authorId.name}</p>
+        <time class="text-xs text-gray-600">${formatDate(c.createdAt)}</time>
+    </div>
+    <p class="mt-1 text-lg italic">${c.body}</p>`;
+  
+  return comment;
+}
+
+async function logout() {
+    const res = await fetch('/auth/logout');
+    if (res.ok) window.location.href = '/';
 }

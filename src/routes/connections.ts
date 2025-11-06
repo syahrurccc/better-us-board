@@ -16,10 +16,13 @@ router.post('/invite', requireAuth, async (req, res, next) => {
     const inviter = await User.findById(req.userId).lean();
     if (!inviter) return res.status(404).json({ error: 'Inviter not found' });
     
-    if (!inviter.partnerId) {
+    if (inviter.partnerId) {
       return res.status(403).json({ error: 'You already have a partner' });
     }
-    const inviteeEmail = objectId.parse(req.body.inviteeEmail);
+    const inviteeEmail = z.email().parse(req.body.inviteeEmail);
+    if (inviter.email === inviteeEmail) {
+      return res.status(403).json({ error: 'Cannot invite yourself' });
+    }
    
     const invitee = await User.findOne({ email: inviteeEmail }).lean();
     if (!invitee) return res.status(404).json({ error: 'No user found.' });
