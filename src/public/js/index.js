@@ -135,7 +135,9 @@ async function invite(event) {
   }
 }
 
+// TODO: find out why this malfunctioned
 function setBadge(count) {
+  console.log(`invite count is ${count}`)
   const show = count > 0;
   [qs('#inviteBadge'), qs('#inviteBadgeInside')]
     .forEach(b => {
@@ -279,6 +281,8 @@ function renderTicketView(ticket, comments) {
   
   qs('#commentForm').addEventListener('submit', (e) => sendComment(e, ticket._id));
   qs('#backToBoard').onclick = () => { location.href = '/'; };
+  qs('#editTicket').onclick = () => editTicket(ticket._id);
+  qs('#deleteTicket').onclick = () => deleteTicket(ticket._id);
 }
 
 async function sendComment(event, ticketId) {
@@ -325,6 +329,25 @@ function renderComment(c) {
     <p class="mt-1 text-lg italic">${c.body}</p>`;
   
   return comment;
+}
+
+async function editTicket() {
+  
+}
+
+async function deleteTicket(ticketId) {
+  try {
+    const res = await fetch(`/${ticketId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+    
+    console.log(result.message);
+  } catch (e) {
+    console.log(e.message)
+  }
 }
 
 async function logout() {
