@@ -2,43 +2,19 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
 
-import { Ticket, Comment, Board} from '../models/schema';
-import { categories, priorities, statuses, objectId } from '../models/schema';
+import { Board } from '../models/board';
+import { Comment } from '../models/comment';
+import { Ticket } from '../models/ticket';
 import { requireAuth } from '../middlewares/requireAuth';
+import { 
+  ticketSchema,
+  ticketPatchSchema,
+  ticketQuerySchema,
+  statuses, 
+  objectId 
+} from '../utils/schemas';
 
 const router = Router();
-
-const asArray = <T extends readonly string[]>(choices: T) =>
-  z.preprocess((v) => {
-    if (v == null || v === '') return undefined;
-    const arr = Array.isArray(v) ? v : [v];
-    return arr.map(s => String(s).trim().toLowerCase());
-  }, z.array(z.enum(choices)).nonempty().optional());
-
-const ticketQuerySchema = z.object({
-  category: asArray(categories),
-  priority: asArray(priorities),
-  status: asArray(statuses),
-  archived: z.coerce.boolean().optional()
-}).strict();
-
-const ticketSchema = z.object({
-  boardId: objectId,
-  title: z.string().min(3).trim(),
-  description: z.string().min(3).trim().optional(),
-  category: z.enum(categories),
-  priority: z.enum(priorities),
-}).strict();
-
-const ticketPatchSchema = z.object({
-  title: z.string().min(3).trim().optional(),
-  description: z.string().min(3).trim().optional(),
-  category: z.enum(categories).optional(),
-  priority: z.enum(priorities).optional(),
-}).refine(d => Object.keys(d).length > 0, 
-  { message: 'No fields changed' });
-
-const commentSchema = z.string().min(1).trim();
 
 async function findTicket(id: String) {
   const ticketId = objectId.parse(id)
@@ -197,7 +173,7 @@ router.post('/:id/comments',
   try {
     const ticket = await findTicket(req.params.id);
     
-    const body = commentSchema.parse(req.body.body);
+    const body = z.string().min(1).trim().parse(req.body.body);
     
     const comment = await Comment.create({
       ticketId: ticket._id,

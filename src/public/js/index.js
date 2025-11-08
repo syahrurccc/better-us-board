@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#logoutBtn').addEventListener('click', () => logout());
   qs('#inviteForm')?.addEventListener('submit', invite);
   qs('#userMenuBtn')?.addEventListener('click', () => toggleMenu());
+  qs('#createTicket')?.addEventListener('click', () => createTicket());
   qs('#openInvites')?.addEventListener('click', async () => {
     qs('#menuMain').classList.add('hidden');
     qs('#invitesView').classList.remove('hidden');
@@ -70,12 +71,12 @@ function renderInvite(invite){
   actions.className = 'flex items-center gap-2';
 
   const accept = document.createElement('button');
-  accept.className = 'rounded-full bg-green-500 px-3 py-1 text-white';
+  accept.className = 'rounded-full bg-green-500 px-3 py-1 text-white hover:cursor-pointer';
   accept.textContent = '✓';
   accept.addEventListener('click', () => respondInvite(invite._id, true));
 
   const reject = document.createElement('button');
-  reject.className = 'rounded-full bg-red-500 px-3 py-1 text-white';
+  reject.className = 'rounded-full bg-red-500 px-3 py-1 text-white hover:cursor-pointer';
   reject.textContent = '✕';
   reject.addEventListener('click', () => respondInvite(invite._id, false));
 
@@ -135,7 +136,6 @@ async function invite(event) {
   }
 }
 
-// TODO: find out why this malfunctioned
 function setBadge(count) {
   console.log(`invite count is ${count}`)
   const show = count > 0;
@@ -192,7 +192,7 @@ async function renderActiveBoard(board) {
     const tickets = await res.json();
     
     if (!res.ok) {
-      window.location.href = '/';
+      location.href = '/';
       return;
     }
     if (tickets.length === 0) return;
@@ -331,8 +331,11 @@ function renderComment(c) {
   return comment;
 }
 
-async function editTicket() {
+async function createTicket() {
   
+}
+
+async function editTicket() {
 }
 
 async function deleteTicket(ticketId) {

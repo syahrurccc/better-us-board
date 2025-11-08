@@ -1,30 +1,38 @@
 import { Router } from 'express';
-import { z } from 'zod';
 
-import { Board, User, Invite, objectId } from '../models/schema';
+import { Board } from '../models/board';
+import { User } from '../models/user';
+import { Invite } from '../models/invite';
+import { boardNameSchema } from '../utils/schemas';
 import { requireAuth } from '../middlewares/requireAuth';
 
 
 const router = Router();
-
-const boardNameSchema = z.object({
-  boardId: objectId,
-  boardName: z.string().min(1)
-})
 
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findById(req.userId).lean();
     if (!user) return res.status(401).json({ error: 'No user found' });
     
+    const inviteCount = await Invite.countDocuments({ 
+      inviteeId: user._id,
+      status: 'pending'
+    });
+    
     if (!user.partnerId) {
-      return res.status(200).json({ username: user.name, board: null});
+      return res.status(200).json({ 
+        username: user.name,
+        inviteCount,
+        board: null});
     } 
     
-    let board = await Board.findOne({ userIds: user._id }).lean();
-    if (!board) board = await Board.create({ userIds: [user._id, user.partnerId] });
+    let board = await Board.findOne({ 
+      userIds: user._id 
+    }).lean();
     
-    const inviteCount = await Invite.countDocuments({ inviteeId: user._id });
+    if (!board) board = await Board.create({ 
+      userIds: [user._id, user.partnerId] 
+    });
     
     return res.status(200).json({ 
       username: user.name, 

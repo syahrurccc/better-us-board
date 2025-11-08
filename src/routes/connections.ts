@@ -1,15 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { User, Invite, Board, objectId } from '../models/schema';
+import { acceptBodySchema, objectId } from '../utils/schemas';
+import { Board } from '../models/board';
+import { User } from '../models/user';
+import { Invite } from '../models/invite';
 import { requireAuth } from '../middlewares/requireAuth';
 
 const router = Router();
-
-const acceptBodySchema = z.object({ 
-  inviteId: objectId,
-  response: z.boolean
-});
 
 router.post('/invite', requireAuth, async (req, res, next) => {
   try {
@@ -36,10 +34,12 @@ router.post('/invite', requireAuth, async (req, res, next) => {
       inviteeId: invitee._id,
     });
     if (exists) {
-      return res.status(409).json({ error: 'An invite is already pending' });
+      return res
+        .status(409)
+        .json({ error: 'An invite is already pending' });
     }
     
-    const invite = await Invite.create({
+    await Invite.create({
       inviterId: req.userId,
       inviteeId: invitee._id,
     });
@@ -53,7 +53,8 @@ router.post('/invite', requireAuth, async (req, res, next) => {
 router.get('/requests', requireAuth, async (req, res, next) => {
   try {
     const invites = await Invite.find({ 
-      inviteeId: req.userId 
+      inviteeId: req.userId,
+      status: 'pending'
     })
     .populate('inviterId', 'name')
     .lean();
@@ -70,25 +71,58 @@ router.post('/respond', requireAuth, async (req, res, next) => {
     
     const invite = await Invite.findById(inviteId);
     if (!invite) return res.status(400).json({ error: 'No invite found' });
+    
     if (invite.status !== 'pending') {
-      return res.status(409).json({ error: "Invite already accepted/rejected" });
+      return res
+        .status(409)
+        .json({ 
+          error: "Invite already accepted/rejected" 
+        });
     }
     
     if (!response) {
       await invite.deleteOne();
-      return res.status(200).json({ message: 'Invite rejected' })
+      return res
+        .status(200)
+        .json({ message: 'Invite rejected' });
     }
     
-    const inviterPartner = await User.findById(invite.inviterId).select('parnerId').lean();
-    if (inviterPartner) {
-      return res.status(409).json({ error: 'Inviter already has a parner' });
+    const inviter = await User
+      .findById(invite.inviterId)
+      .select('partnerId')
+      .lean();
+    
+    if (!inviter) return res
+      .status(409)
+      .json({ 
+        error: 'Inviter do not exists' 
+      });
+    
+    if (inviter.partnerId) {
+      return res
+        .status(409)
+        .json({ 
+          error: 'Inviter already has a partner' 
+        });
     }
     
     await Promise.all([
-      Invite.findByIdAndUpdate(inviteId, { status: 'accepted' }),
-      Invite.deleteMany({ inviteeId: [invite.inviterId, invite.inviteeId], status: 'pending' }),
-      User.findByIdAndUpdate(invite.inviterId, { partnerId: invite.inviteeId }),
-      User.findByIdAndUpdate(invite.inviteeId, { partnerId: invite.inviterId }),
+      Invite.findByIdAndUpdate(
+        inviteId, 
+        { status: 'accepted' }
+      ),
+      Invite.deleteMany({ 
+        inviteeId: [invite.inviterId, invite.inviteeId], 
+        status: 'pending' 
+      }),
+      User.findByIdAndUpdate(
+        invite.inviterId, 
+        { partnerId: invite.inviteeId }
+      ),
+      User.findByIdAndUpdate(
+        invite.inviteeId, 
+        { partnerId: invite.inviterId }
+      ),
     ]);
     
     await Board.create({
@@ -96,7 +130,8 @@ router.post('/respond', requireAuth, async (req, res, next) => {
       userIds: [invite.inviterId, invite.inviteeId]
     });
     
-    return res.status(202).json({ message: 'Invite accepted' });
+    return res.status(202)
+      .json({ message: 'Invite accepted' });
   } catch (e: any) {
     next(e);
   }

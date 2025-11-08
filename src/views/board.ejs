@@ -38,7 +38,7 @@
         
                 <div class="flex items-center gap-3">
                     <button id="createTicket" 
-                        class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:bg-black hover:text-white">
+                        class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
                         + Create Ticket
                     </button>
                 </div>
@@ -148,6 +148,95 @@
                 <ul id="commentsList" class="mt-6 space-y-6">
                 </ul>
             </section>
+        </section>
+        
+        <section id="createTicketView" class="hidden mx-auto max-w-3xl px-4 py-8 text-gray-900">
+            <!-- back -->
+            <button id="backFromCreate"
+                    class="mb-6 flex items-center gap-2 text-sm text-gray-700 hover:underline">
+                <span class="text-lg">‹</span>
+                Back to main board
+            </button>
+            
+            <div class="rounded-3xl border border-black/10 bg-white p-6 sm:p-8">
+                <h2 class="mb-6 text-2xl font-extrabold">Create New Ticket</h2>
+            
+                <form id="createTicketForm" class="space-y-6">
+                <!-- Title -->
+                <div>
+                    <label for="ct-title" class="block text-lg font-semibold">Title</label>
+                    <input
+                    id="ct-title"
+                    name="title"
+                    type="text"
+                    required
+                    minlength="3"
+                    placeholder="e.g., Plan dinner"
+                    class="mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    />
+                </div>
+            
+                <!-- Description -->
+                <div>
+                    <label for="ct-description" class="block text-lg font-semibold">Description</label>
+                    <textarea
+                    id="ct-description"
+                    name="description"
+                    rows="8"
+                    placeholder="Write details, context, or next steps…"
+                    class="mt-2 w-full rounded-3xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    ></textarea>
+                </div>
+            
+                <!-- Row: Category / Priority -->
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <!-- Category -->
+                    <div>
+                    <label for="ct-category" class="block text-lg font-semibold">Category</label>
+                    <select
+                        id="ct-category"
+                        name="category"
+                        required
+                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    >
+                        <!-- replace with your real categories -->
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="relationship">relationship</option>
+                        <option value="finance">finance</option>
+                        <option value="health">health</option>
+                        <option value="chores">chores</option>
+                        <option value="misc">misc</option>
+                    </select>
+                    </div>
+            
+                    <!-- Priority -->
+                    <div>
+                    <label for="ct-priority" class="block text-lg font-semibold">Priority</label>
+                    <select
+                        id="ct-priority"
+                        name="priority"
+                        required
+                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    >
+                        <option value="" disabled selected>Select priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    </div>
+                </div>
+            
+                <!-- Submit -->
+                <div class="pt-2">
+                    <button
+                    type="submit"
+                    class="w-full rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                    Submit
+                    </button>
+                </div>
+                </form>
+            </div>
         </section>
     
     </div>
