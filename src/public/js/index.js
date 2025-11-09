@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+function formatDate(date) {
+  return new Date(date)
+    .toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 function toggleMenu() {
   const menu = qs('#userMenu');
   const menuBtn = qs('#userMenuBtn');
@@ -166,7 +175,6 @@ async function fetchBoard() {
     } 
     
     const { username, inviteCount, board } = data;
-    console.log(data)
     
     qs('#emptyBoard').classList.toggle('hidden', board);
     qs('#activeBoard').classList.toggle('hidden', !board);
@@ -231,7 +239,8 @@ function buildTicketCards(ticket) {
   };
   ticketEl.classList = [
     'rounded-xl border border-black/10',
-    'bg-white p-4 shadow-sm'
+    'bg-white p-4 shadow-sm',
+    'hover:shadow-md hover:cursor-pointer'
   ].join(' ');
   ticketEl.innerHTML = `
     <p class="text-base font-semibold">${ticket.title}</p>
@@ -243,7 +252,7 @@ function buildTicketCards(ticket) {
           </span>
       </div>`
   
-  ticket.addEventListener('click', () => loadTicket(ticket._id));
+  ticketEl.addEventListener('click', () => loadTicket(ticket._id));
   
   return ticketEl;
 }
@@ -263,10 +272,13 @@ async function loadTicket(ticketId) {
     qs('#activeBoard').classList.add('hidden');
     qs('#ticketView').classList.remove('hidden');
     
+    qs('#ticketTitle').textContent = ticket.title;
     qs('#ticketIssuer').textContent = ticket.authorId.name;
-    qs('#ticketCategory').textContent = ticket.category;
+    qs('#ticketDate').textContent = formatDate(ticket.createdAt);
+    qs('#ticketDescription p').textContent = ticket.description || '';
+    qs('#ticketCategory').textContent = capitalize(ticket.category);
     const priority = ticket.priority;
-    qs('#ticketPriority').textContent = priority;
+    qs('#ticketPriority').textContent = capitalize(priority);
     const getPriorityClasses = (priority) => {
         if (priority === 'high')   return 'h-3 w-3 rounded-full bg-red-400';
         if (priority === 'medium') return 'h-3 w-3 rounded-full bg-yellow-400';
@@ -290,12 +302,27 @@ async function loadTicket(ticketId) {
   }
 }
 
+function renderComment(c) {
+  const comment = document.createElement('li');
+  comment.classList = 'border-t border-black/10 pt-4';
+  comment.innerHTML`
+    <div class="flex items-baseline justify-between">
+        <p class="font-medium">${c.authorId.name}</p>
+        <time class="text-xs text-gray-600">${formatDate(c.createdAt)}</time>
+    </div>
+    <p class="mt-1 text-lg italic">${c.body}</p>`;
+  
+  return comment;
+}
+
 async function sendComment(event, ticketId) {
   event.preventDefault();
   const f = event.currentTarget;
   const payload = {
     body: f.body.value.trim()
   };
+  
+  if (!payload.body) return;
   
   try {
     const res = await fetch(`/${ticketId}/comments`, {
@@ -316,49 +343,32 @@ async function sendComment(event, ticketId) {
   }
 }
 
-function renderComment(c) {
-  const formatDate = (date) => 
-    new Date(date).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  
-  const comment = document.createElement('li');
-  comment.classList = 'border-t border-black/10 pt-4';
-  comment.innerHTML`
-    <div class="flex items-baseline justify-between">
-        <p class="font-medium">${c.authorId.name}</p>
-        <time class="text-xs text-gray-600">${formatDate(c.createdAt)}</time>
-    </div>
-    <p class="mt-1 text-lg italic">${c.body}</p>`;
-  
-  return comment;
-}
-
 function editOrCreateTicket(type, ticket = null) {
+  const isEdit = type === 'edit';
   qs('#activeBoard').classList.add('hidden');
   qs('#ticketView').classList.add('hidden');
   qs('#createTicketView').classList.remove('hidden');
   qs('#createTicketView h2')
-    .textContent = type === 'create' ? 'Create New Ticket' : 'Edit Ticket';
+    .textContent = isEdit ? 'Edit Ticket' : 'Create New Ticket';
   
-  const f = qs('#createTicketForm');
-  if (type === 'edit') {
-    f.title.value = ticket.title;
-    f.description.value = ticket.description ?? '';
-    f.category.value = ticket.category;
-    f.priority.value = ticket.priority;
+  const form = qs('#createTicketForm');
+  form.reset();
+  if (isEdit) {
+    form.title.value = ticket.title;
+    form.description.value = ticket.description ?? '';
+    form.category.value = ticket.category;
+    form.priority.value = ticket.priority;
   }
   
-  const method = type === 'create' ? 'POST' : 'PATCH';
-  f.addEventListener('submit', async () => {
+  const method = isEdit ? 'PATCH' : 'POST';
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
     const p = {
       boardId: qs('#activeBoard').dataset.id,
-      title: f.title.value.trim(),
-      description: f.description.value.trim() || null,
-      category: f.category.value,
-      priority: f.priority.value,
+      title: form.title.value.trim(),
+      description: form.description.value.trim() || null,
+      category: form.category.value,
+      priority: form.priority.value,
     }
     
     const required = [p.boardId, p.title, p.category, p.priority];
@@ -369,7 +379,7 @@ function editOrCreateTicket(type, ticket = null) {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(p),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);

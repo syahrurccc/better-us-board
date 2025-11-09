@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const categories = [
   'communication', 
+  'relationship',
   'household', 
   'finance', 
   'wellbeing', 

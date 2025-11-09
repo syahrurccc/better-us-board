@@ -6,14 +6,14 @@
 <body class="min-h-dvh flex flex-col bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
 <main class="flex-1"">
     <section class="relative hero-bg">
-    <div class="mx-auto max-w-6xl px-4 py-8">
-    
+    <div class="w-full px-4 md:px-8 py-8">
+
         <section id="emptyBoard" class="flex min-h-[75svh] flex-col items-center justify-center text-center">
             <p class="text-xl sm:text-2xl font-semibold">Seems like you don’t have a partner, yet.</p>
             <p class="mt-1 text-gray-700">
                 If your partner is on Better Us, connect now so you can start a board together.
             </p>
-        
+
             <form id="inviteForm" class="mt-6 flex w-full max-w-xl items-center gap-3">
                 <input
                     type="email"
@@ -28,45 +28,45 @@
                 </button>
             </form>
         </section>
-    
+
         <section id="activeBoard" class="hidden min-h-[75svh]">
             <header class="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div class="space-y-1">
                     <p class="text-sm uppercase tracking-wide text-gray-600">Board Name</p>
                     <h1 id="boardName" class="text-2xl font-bold">Our Board</h1>
                 </div>
-        
+
                 <div class="flex items-center gap-3">
-                    <button id="createTicket" 
+                    <button id="createTicket"
                         class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
                         + Create Ticket
                     </button>
                 </div>
             </header>
-        
+
             <!-- columns -->
             <div class="grid gap-6 overflow-x-auto sm:grid-cols-2 lg:grid-cols-4">
                 <!-- column: OPEN -->
                 <div class="flex min-w-[260px] flex-col rounded-2xl border border-black/10 bg-white p-4">
                     <h2 class="mb-3 text-lg font-semibold tracking-wide">OPEN</h2>
-                    <div id="openTickets" class="space-y-3">                    
+                    <div id="openTickets" class="space-y-3">
                     </div>
                 </div>
-        
+
                 <!-- column: IN PROGRESS -->
                 <div class="flex min-w-[260px] flex-col rounded-2xl border border-black/10 bg-white p-4">
                     <h2 class="mb-3 text-lg font-semibold tracking-wide">IN PROGRESS</h2>
                     <div id="in_progressTickets" class="space-y-3">
                     </div>
                 </div>
-        
+
                 <!-- column: NEEDS REFLECTION -->
                 <div class="flex min-w-[260px] flex-col rounded-2xl border border-black/10 bg-white p-4">
                     <h2 class="mb-3 text-lg font-semibold tracking-wide">NEEDS REFLECTION</h2>
                     <div id="needs_reflectionTickets" class="space-y-3">
                     </div>
                 </div>
-        
+
                 <!-- column: RESOLVED -->
                 <div class="flex min-w-[260px] flex-col rounded-2xl border border-black/10 bg-white p-4">
                     <h2 class="mb-3 text-lg font-semibold tracking-wide">RESOLVED</h2>
@@ -75,35 +75,34 @@
                 </div>
             </div>
         </section>
-        
-        <section id="ticketView" class="hidden mx-auto max-w-4xl px-4 py-8 text-gray-900">
+
+        <!-- outer section adds page padding -->
+        <section id="ticketView" class="hidden px-4 md:px-8 py-8">
+        <!-- this is the panel/container -->
+        <div class="mx-auto w-full max-w-4xl rounded-3xl border border-black/10 bg-white/90 p-6 md:p-8 shadow-lg">
             <!-- top bar -->
             <div class="mb-6 flex items-center justify-between text-sm text-gray-700">
-              <!-- left: back -->
-              <%- include('includes/backbtn')%>
-            
-              <!-- right: edit / delete -->
-              <div id="modifyButtons" class="flex items-center gap-4">
+            <%- include('includes/backbtn')%>
+            <div id="modifyButtons" class="flex items-center gap-4">
                 <button id="editTicket" class="hover:underline">Edit</button>
                 <button id="deleteTicket" class="hover:underline text-red-500">Delete</button>
-              </div>
             </div>
-
+            </div>
         
             <!-- title + meta -->
             <header class="flex flex-wrap items-start justify-between gap-4 border-b border-black/10 pb-3">
-                <div>
-                    <h2 id="ticketTitle" class="text-2xl font-extrabold leading-tight"></h2>
-                    <p class="mt-1 text-sm text-gray-600">
-                    issued by: <span id="ticketIssuer" class="font-medium"></span>
-                    </p>
-                </div>
-                <time id="ticketDate" class="text-sm text-gray-600 whitespace-nowrap"></time>
+            <div>
+                <h2 id="ticketTitle" class="text-2xl font-extrabold leading-tight"></h2>
+                <p class="mt-1 text-sm text-gray-600">
+                issued by: <span id="ticketIssuer" class="font-medium"></span>
+                </p>
+            </div>
+            <time id="ticketDate" class="text-sm text-gray-600 whitespace-nowrap"></time>
             </header>
         
             <!-- description -->
             <article id="ticketDescription" class="mt-6 space-y-3 leading-relaxed">
-                <p></p>
+            <p></p>
             </article>
         
             <!-- tags -->
@@ -116,43 +115,37 @@
                 <dt class="text-gray-600">Priority:</dt>
                 <dd class="flex items-center gap-2 font-medium">
                 <span id="ticketPriority"></span>
-                <span id="ticketPriorityDot" class=""></span>
+                <span id="ticketPriorityDot" class="h-3 w-3 rounded-full"></span>
                 </dd>
             </div>
             </dl>
         
             <!-- discussions -->
             <section class="mt-10">
-                <h3 class="text-xl font-bold">Discussions</h3>
-            
-                <form id="commentForm" class="mt-3 space-y-3">
-                    <input 
-                        id="commentInput"
-                        name="body"
-                        type="text"
-                        placeholder="add comments"
-                        class="w-full rounded-2xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20" 
-                    />
-                    <div class="flex justify-end">
-                    <button type="click"
-                            class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:bg-black hover:text-white">
-                        post
-                    </button>
-                    </div>
-                </form>
-            
-                <ul id="commentsList" class="mt-6 space-y-6">
-                </ul>
+            <h3 class="text-xl font-bold">Discussions</h3>
+            <form id="commentForm" class="mt-3 space-y-3">
+                <input id="commentInput" name="body" type="text" placeholder="Add comments"
+                    class="w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md" />
+                <div class="flex justify-end">
+                <button type="submit"
+                        class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
+                    Post
+                </button>
+                </div>
+            </form>
+            <ul id="commentsList" class="mt-6 space-y-6"></ul>
             </section>
+        </div>
         </section>
-        
+
+
         <section id="createTicketView" class="hidden mx-auto max-w-3xl px-4 py-8 text-gray-900">
             <!-- back -->
             <%- include('includes/backbtn')%>
-            
+
             <div class="rounded-3xl border border-black/10 bg-white p-6 sm:p-8">
                 <h2 class="mb-6 text-2xl font-extrabold"></h2>
-            
+
                 <form id="createTicketForm" class="space-y-6">
                 <!-- Title -->
                 <div>
@@ -167,7 +160,7 @@
                     class="mt-2 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
                     />
                 </div>
-            
+
                 <!-- Description -->
                 <div>
                     <label for="ct-description" class="block text-lg font-semibold">Description</label>
@@ -179,7 +172,7 @@
                     class="mt-2 w-full rounded-3xl border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
                     ></textarea>
                 </div>
-            
+
                 <!-- Row: Category / Priority -->
                 <div class="grid gap-6 sm:grid-cols-2">
                     <!-- Category -->
@@ -193,14 +186,15 @@
                     >
                         <!-- replace with your real categories -->
                         <option value="" disabled selected>Select a category</option>
-                        <option value="relationship">relationship</option>
-                        <option value="finance">finance</option>
-                        <option value="health">health</option>
-                        <option value="chores">chores</option>
-                        <option value="misc">misc</option>
+                        <option value="communication">Communication</option>
+                        <option value="relationship">Relationship</option>
+                        <option value="finance">Finance</option>
+                        <option value="wellbeing">Wellbeing</option>
+                        <option value="household">Household</option>
+                        <option value="other">Other</option>
                     </select>
                     </div>
-            
+
                     <!-- Priority -->
                     <div>
                     <label for="ct-priority" class="block text-lg font-semibold">Priority</label>
@@ -217,12 +211,12 @@
                     </select>
                     </div>
                 </div>
-            
+
                 <!-- Submit -->
                 <div class="pt-2">
                     <button
                     type="submit"
-                    class="w-full rounded-full bg-black px-6 py-3 text-lg font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+                    class="w-full rounded-full bg-black px-6 py-3 text-lg font-medium text-white transition hover:opacity-90 hover:cursor-pointer focus:outline-none focus:ring-2 focus:ring-black"
                     >
                     Submit
                     </button>
@@ -230,9 +224,8 @@
                 </form>
             </div>
         </section>
-    
+
     </div>
 </main>
 
 <%- include('includes/footer') %>
-

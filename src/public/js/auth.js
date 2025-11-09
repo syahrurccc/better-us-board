@@ -1,8 +1,13 @@
 const qs = (el) => document.querySelector(el);
 
 document.addEventListener('DOMContentLoaded', () => {
-  qs('#registerForm')?.addEventListener('submit', register);
-  qs('#loginForm')?.addEventListener('submit', login);
+  const registerForm = qs('#registerForm');
+  const loginForm = qs('#loginForm');
+  
+  registerForm?.reset();
+  loginForm?.reset();
+  registerForm?.addEventListener('submit', register);
+  loginForm?.addEventListener('submit', login);
 });
 
 async function register(event) {
