@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#logoutBtn').addEventListener('click', () => logout());
   qs('#inviteForm')?.addEventListener('submit', invite);
   qs('#userMenuBtn')?.addEventListener('click', () => toggleMenu());
-  qs('#createTicket')?.addEventListener('click', () => createTicket());
+  qs('#createTicket')?.addEventListener('click', () => editOrCreateTicket('create'));
   qs('#openInvites')?.addEventListener('click', async () => {
     qs('#menuMain').classList.add('hidden');
     qs('#invitesView').classList.remove('hidden');
@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
   qs('#backToMenu').addEventListener('click', () => {
     qs('#menuMain').classList.remove('hidden');
     qs('#invitesView').classList.add('hidden');
+  });
+  document.querySelectorAll('.backToBoard')?.forEach(b => {
+    b.addEventListener('click', () => {
+      console.log('clicked');
+      location.href = '/'
+    });
   });
 
 });
@@ -160,6 +166,7 @@ async function fetchBoard() {
     } 
     
     const { username, inviteCount, board } = data;
+    console.log(data)
     
     qs('#emptyBoard').classList.toggle('hidden', board);
     qs('#activeBoard').classList.toggle('hidden', !board);
@@ -167,15 +174,16 @@ async function fetchBoard() {
     qs('#username').textContent = `Hi, ${username}!`;
     setBadge(inviteCount);
     
-    if (board) await renderActiveBoard();
+    if (board) await renderActiveBoard(board);
   } catch (e) {
     console.error(e.message);
   }
 }
 
 async function renderActiveBoard(board) {
-  const boardName = qs('#boardName');
-  boardName.textContent = `${board.title}`;
+  
+  qs('#activeBoard').dataset.id = board._id;
+  qs('#boardName').textContent = `${board.name}`;
   
   const cards = {
     open: qs('#openTickets'),
@@ -250,39 +258,36 @@ async function loadTicket(ticketId) {
     
     if (!res.ok) throw new Error(data.error);
     
-    const { ticket, comments } = data;
+    const { ticket, comments, isAuthor } = data;
     
     qs('#activeBoard').classList.add('hidden');
     qs('#ticketView').classList.remove('hidden');
     
-    renderTicketView(ticket, comments);
+    qs('#ticketIssuer').textContent = ticket.authorId.name;
+    qs('#ticketCategory').textContent = ticket.category;
+    const priority = ticket.priority;
+    qs('#ticketPriority').textContent = priority;
+    const getPriorityClasses = (priority) => {
+        if (priority === 'high')   return 'h-3 w-3 rounded-full bg-red-400';
+        if (priority === 'medium') return 'h-3 w-3 rounded-full bg-yellow-400';
+        return 'h-3 w-3 rounded-full bg-green-400';
+    };
+    qs('#ticketPriorityDot').classList = getPriorityClasses(priority);
+    
+    const commentList = qs('#commentsList');
+    comments.forEach(c => {
+      const comment = renderComment(c);
+      commentList.append(comment);
+    });
+    
+    qs('#modifyButtons').classList.toggle('hidden', !isAuthor);
+    
+    qs('#commentForm').addEventListener('submit', (e) => sendComment(e, ticket._id));
+    qs('#editTicket')?.addEventListener('click', () => editOrCreateTicket('edit', ticket));
+    qs('#deleteTicket')?.addEventListener('click', () => deleteTicket(ticket._id));
   } catch (e) {
     console.log(e.message);
   }
-}
-
-function renderTicketView(ticket, comments) {
-  qs('#ticketIssuer').textContent = ticket.authorId.name;
-  qs('#ticketCategory').textContent = ticket.category;
-  const priority = ticket.priority;
-  qs('#ticketPriority').textContent = priority;
-  const getPriorityClasses = (priority) => {
-      if (priority === 'high')   return 'h-3 w-3 rounded-full bg-red-400';
-      if (priority === 'medium') return 'h-3 w-3 rounded-full bg-yellow-400';
-      return 'h-3 w-3 rounded-full bg-green-400';
-  };
-  qs('#ticketPriorityDot').classList = getPriorityClasses(priority);
-  
-  const commentList = qs('#commentsList');
-  comments.forEach(c => {
-    const comment = renderComment(c);
-    commentList.append(comment);
-  });
-  
-  qs('#commentForm').addEventListener('submit', (e) => sendComment(e, ticket._id));
-  qs('#backToBoard').onclick = () => { location.href = '/'; };
-  qs('#editTicket').onclick = () => editTicket(ticket._id);
-  qs('#deleteTicket').onclick = () => deleteTicket(ticket._id);
 }
 
 async function sendComment(event, ticketId) {
@@ -331,11 +336,50 @@ function renderComment(c) {
   return comment;
 }
 
-async function createTicket() {
+function editOrCreateTicket(type, ticket = null) {
+  qs('#activeBoard').classList.add('hidden');
+  qs('#ticketView').classList.add('hidden');
+  qs('#createTicketView').classList.remove('hidden');
+  qs('#createTicketView h2')
+    .textContent = type === 'create' ? 'Create New Ticket' : 'Edit Ticket';
   
-}
-
-async function editTicket() {
+  const f = qs('#createTicketForm');
+  if (type === 'edit') {
+    f.title.value = ticket.title;
+    f.description.value = ticket.description ?? '';
+    f.category.value = ticket.category;
+    f.priority.value = ticket.priority;
+  }
+  
+  const method = type === 'create' ? 'POST' : 'PATCH';
+  f.addEventListener('submit', async () => {
+    const p = {
+      boardId: qs('#activeBoard').dataset.id,
+      title: f.title.value.trim(),
+      description: f.description.value.trim() || null,
+      category: f.category.value,
+      priority: f.priority.value,
+    }
+    
+    const required = [p.boardId, p.title, p.category, p.priority];
+    if (required.some(e => !e)) return;
+    
+    try {
+      const res = await fetch('/tickets', {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      
+      console.log(result.message);
+      
+    } catch (e) {
+      console.log(e.message);
+    }
+  }); 
 }
 
 async function deleteTicket(ticketId) {

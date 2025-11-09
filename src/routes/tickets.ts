@@ -82,7 +82,7 @@ router.post('/', requireAuth, async (req, res, next) => {
       priority: ticket.priority,
     });
     
-    return res.status(201);
+    return res.status(201).json({ message: 'Ticket created' });
   } catch (e) {
     next(e);
   }
@@ -97,6 +97,8 @@ router.get('/:id', requireAuth, async (req, res, next) => {
     ).populate('authorId', 'name').lean();
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
     
+    const isAuthor = ticket.authorId._id.toString() === req.userId;
+    
     const comments = await Comment.find({ 
       ticketId: ticket._id 
     })
@@ -104,7 +106,7 @@ router.get('/:id', requireAuth, async (req, res, next) => {
     .sort({ createdAt: -1 })
     .lean();
     
-    return res.status(200).json({ ticket, comments });
+    return res.status(200).json({ ticket, comments, isAuthor });
   } catch (e) {
     next(e);
   }

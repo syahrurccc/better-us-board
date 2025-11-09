@@ -44,14 +44,14 @@ export const ticketQuerySchema = z.object({
 export const ticketSchema = z.object({
   boardId: objectId,
   title: z.string().min(3).trim(),
-  description: z.string().min(3).trim().optional(),
+  description: z.string().trim().nullable(),
   category: z.enum(categories),
   priority: z.enum(priorities),
 }).strict();
 
 export const ticketPatchSchema = z.object({
   title: z.string().min(3).trim().optional(),
-  description: z.string().min(3).trim().optional(),
+  description: z.string().trim().nullable(),
   category: z.enum(categories).optional(),
   priority: z.enum(priorities).optional(),
 }).refine(d => Object.keys(d).length > 0, 

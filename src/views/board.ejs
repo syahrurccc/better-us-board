@@ -3,8 +3,8 @@
 
 <script src="/js/index.js"></script>
 </head>
-<body class="min-h-dvh bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
-<main>
+<body class="min-h-dvh flex flex-col bg-peach-50 text-gray-900 antialiased selection:bg-black selection:text-white">
+<main class="flex-1"">
     <section class="relative hero-bg">
     <div class="mx-auto max-w-6xl px-4 py-8">
     
@@ -29,7 +29,7 @@
             </form>
         </section>
     
-        <section id="activeBoard" class="hidden">
+        <section id="activeBoard" class="hidden min-h-[75svh]">
             <header class="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div class="space-y-1">
                     <p class="text-sm uppercase tracking-wide text-gray-600">Board Name</p>
@@ -80,11 +80,7 @@
             <!-- top bar -->
             <div class="mb-6 flex items-center justify-between text-sm text-gray-700">
               <!-- left: back -->
-              <button id="backToBoard"
-                      class="flex items-center gap-2 hover:underline">
-                <span class="text-lg">‹</span>
-                Back to main board
-              </button>
+              <%- include('includes/backbtn')%>
             
               <!-- right: edit / delete -->
               <div id="modifyButtons" class="flex items-center gap-4">
@@ -152,14 +148,10 @@
         
         <section id="createTicketView" class="hidden mx-auto max-w-3xl px-4 py-8 text-gray-900">
             <!-- back -->
-            <button id="backFromCreate"
-                    class="mb-6 flex items-center gap-2 text-sm text-gray-700 hover:underline">
-                <span class="text-lg">‹</span>
-                Back to main board
-            </button>
+            <%- include('includes/backbtn')%>
             
             <div class="rounded-3xl border border-black/10 bg-white p-6 sm:p-8">
-                <h2 class="mb-6 text-2xl font-extrabold">Create New Ticket</h2>
+                <h2 class="mb-6 text-2xl font-extrabold"></h2>
             
                 <form id="createTicketForm" class="space-y-6">
                 <!-- Title -->
@@ -172,7 +164,7 @@
                     required
                     minlength="3"
                     placeholder="e.g., Plan dinner"
-                    class="mt-2 w-full rounded-2xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    class="mt-2 w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
                     />
                 </div>
             
@@ -184,7 +176,7 @@
                     name="description"
                     rows="8"
                     placeholder="Write details, context, or next steps…"
-                    class="mt-2 w-full rounded-3xl border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    class="mt-2 w-full rounded-3xl border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md"
                     ></textarea>
                 </div>
             
@@ -197,7 +189,7 @@
                         id="ct-category"
                         name="category"
                         required
-                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:shadow-md"
                     >
                         <!-- replace with your real categories -->
                         <option value="" disabled selected>Select a category</option>
@@ -216,7 +208,7 @@
                         id="ct-priority"
                         name="priority"
                         required
-                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/20"
+                        class="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 focus:outline-none focus:shadow-md"
                     >
                         <option value="" disabled selected>Select priority</option>
                         <option value="low">Low</option>
@@ -230,7 +222,7 @@
                 <div class="pt-2">
                     <button
                     type="submit"
-                    class="w-full rounded-full bg-black px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+                    class="w-full rounded-full bg-black px-6 py-3 text-lg font-medium text-white transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
                     >
                     Submit
                     </button>

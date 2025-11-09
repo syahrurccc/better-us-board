@@ -12,7 +12,6 @@
     --color-yellow-400: oklch(85.2% 0.199 91.936);
     --color-green-400: oklch(79.2% 0.209 151.711);
     --color-green-500: oklch(72.3% 0.219 149.579);
-    --color-gray-400: oklch(70.7% 0.022 261.325);
     --color-gray-600: oklch(44.6% 0.03 256.802);
     --color-gray-700: oklch(37.3% 0.034 259.733);
     --color-gray-800: oklch(27.8% 0.033 256.848);
@@ -313,14 +312,30 @@
   .table {
     display: table;
   }
+  .size-6 {
+    width: calc(var(--spacing) * 6);
+    height: calc(var(--spacing) * 6);
+  }
   .h-3 {
     height: calc(var(--spacing) * 3);
+  }
+  .h-4 {
+    height: calc(var(--spacing) * 4);
+  }
+  .h-5 {
+    height: calc(var(--spacing) * 5);
   }
   .min-h-\[75svh\] {
     min-height: 75svh;
   }
+  .min-h-\[80svh\] {
+    min-height: 80svh;
+  }
   .min-h-\[85svh\] {
     min-height: 85svh;
+  }
+  .min-h-\[svh\] {
+    min-height: svh;
   }
   .min-h-dvh {
     min-height: 100dvh;
@@ -330,6 +345,9 @@
   }
   .w-3 {
     width: calc(var(--spacing) * 3);
+  }
+  .w-5 {
+    width: calc(var(--spacing) * 5);
   }
   .w-72 {
     width: calc(var(--spacing) * 72);
@@ -354,6 +372,9 @@
   }
   .min-w-\[260px\] {
     min-width: 260px;
+  }
+  .flex-1 {
+    flex: 1;
   }
   .flex-grow {
     flex-grow: 1;
