@@ -38,7 +38,9 @@
 
                 <div class="flex items-center gap-3">
                     <button id="createTicket"
-                        class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
+                        class="rounded-full bg-white px-5 py-2 
+                        text-sm font-medium text-black transition shadow-md
+                        hover:cursor-pointer hover:bg-black hover:text-white">
                         + Create Ticket
                     </button>
                 </div>
@@ -76,70 +78,70 @@
             </div>
         </section>
 
-        <!-- outer section adds page padding -->
-        <section id="ticketView" class="hidden px-4 md:px-8 py-8">
-        <!-- this is the panel/container -->
-        <div class="mx-auto w-full max-w-4xl rounded-3xl border border-black/10 bg-white/90 p-6 md:p-8 shadow-lg">
-            <!-- top bar -->
-            <div class="mb-6 flex items-center justify-between text-sm text-gray-700">
-            <%- include('includes/backbtn')%>
-            <div id="modifyButtons" class="flex items-center gap-4">
-                <button id="editTicket" class="hover:underline">Edit</button>
-                <button id="deleteTicket" class="hover:underline text-red-500">Delete</button>
-            </div>
-            </div>
-        
-            <!-- title + meta -->
-            <header class="flex flex-wrap items-start justify-between gap-4 border-b border-black/10 pb-3">
-            <div>
-                <h2 id="ticketTitle" class="text-2xl font-extrabold leading-tight"></h2>
-                <p class="mt-1 text-sm text-gray-600">
-                issued by: <span id="ticketIssuer" class="font-medium"></span>
-                </p>
-            </div>
-            <time id="ticketDate" class="text-sm text-gray-600 whitespace-nowrap"></time>
-            </header>
-        
-            <!-- description -->
-            <article id="ticketDescription" class="mt-6 space-y-3 leading-relaxed">
-            <p></p>
-            </article>
-        
-            <!-- tags -->
-            <dl class="mt-6 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-            <div class="flex items-center gap-2">
-                <dt class="text-gray-600">Category:</dt>
-                <dd id="ticketCategory" class="font-medium"></dd>
-            </div>
-            <div class="flex items-center gap-2">
-                <dt class="text-gray-600">Priority:</dt>
-                <dd class="flex items-center gap-2 font-medium">
-                <span id="ticketPriority"></span>
-                <span id="ticketPriorityDot" class="h-3 w-3 rounded-full"></span>
-                </dd>
-            </div>
-            </dl>
-        
-            <!-- discussions -->
-            <section class="mt-10">
-            <h3 class="text-xl font-bold">Discussions</h3>
-            <form id="commentForm" class="mt-3 space-y-3">
-                <input id="commentInput" name="body" type="text" placeholder="Add comments"
-                    class="w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md" />
-                <div class="flex justify-end">
-                <button type="submit"
-                        class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
-                    Post
-                </button>
+        <section id="ticketView" class="hidden min-h-[75svh] px-4 md:px-8 py-8">
+            <!-- this is the panel/container -->
+            <div class="mx-auto w-full max-w-4xl rounded-3xl border border-black/10 bg-white/90 p-6 md:p-8 shadow-lg">
+                <!-- top bar -->
+                <div class="mb-6 flex items-center justify-between text-sm text-gray-700">
+                <%- include('includes/backbtn')%>
+                <div id="modifyButtons" class="flex items-center gap-4">
+                    <button id="editTicket" class="hover:underline">Edit</button>
+                    <button id="archiveTicket" class="hover:underline"></button>
+                    <button id="resolveTicket" class="hover:underline">Mark as Resolved</button>
+                    <button id="deleteTicket" class="hover:underline text-red-500">Delete</button>
                 </div>
-            </form>
-            <ul id="commentsList" class="mt-6 space-y-6"></ul>
-            </section>
-        </div>
+                </div>
+            
+                <!-- title + meta -->
+                <header class="flex flex-wrap items-start justify-between gap-4 border-b border-black/10 pb-3">
+                <div>
+                    <h2 id="ticketTitle" class="text-2xl font-extrabold leading-tight"></h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                    issued by: <span id="ticketIssuer" class="font-medium"></span>
+                    </p>
+                </div>
+                <time id="ticketDate" class="text-sm text-gray-600 whitespace-nowrap"></time>
+                </header>
+            
+                <!-- description -->
+                <article id="ticketDescription" class="mt-6 space-y-3 leading-relaxed">
+                <p></p>
+                </article>
+            
+                <!-- tags -->
+                <dl class="mt-6 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+                <div class="flex items-center gap-2">
+                    <dt class="text-gray-600">Category:</dt>
+                    <dd id="ticketCategory" class="font-medium"></dd>
+                </div>
+                <div class="flex items-center gap-2">
+                    <dt class="text-gray-600">Priority:</dt>
+                    <dd class="flex items-center gap-2 font-medium">
+                    <span id="ticketPriority"></span>
+                    <span id="ticketPriorityDot" class="h-3 w-3 rounded-full"></span>
+                    </dd>
+                </div>
+                </dl>
+            
+                <!-- discussions -->
+                <section class="mt-10">
+                <h3 class="text-xl font-bold">Discussions</h3>
+                <form id="commentForm" class="mt-3 space-y-3">
+                    <input id="commentInput" name="body" type="text" placeholder="Add comments"
+                        class="w-full rounded-full border border-black/10 px-4 py-3 focus:outline-none focus:shadow-md" />
+                    <div class="flex justify-end">
+                    <button type="submit"
+                            class="rounded-full border border-black px-5 py-2 text-sm font-medium text-black transition hover:cursor-pointer hover:bg-black hover:text-white">
+                        Post
+                    </button>
+                    </div>
+                </form>
+                <ul id="commentsList" class="mt-6 space-y-6"></ul>
+                </section>
+            </div>
         </section>
 
-
-        <section id="createTicketView" class="hidden mx-auto max-w-3xl px-4 py-8 text-gray-900">
+        <section id="createTicketView" class="hidden min-h-[75svh] mx-auto max-w-3xl px-4 py-8 text-gray-900">
             <!-- back -->
             <%- include('includes/backbtn')%>
 

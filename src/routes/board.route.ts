@@ -1,9 +1,9 @@
 import { Router } from 'express';
 
-import { Board } from '../models/board';
-import { User } from '../models/user';
-import { Invite } from '../models/invite';
-import { boardNameSchema } from '../utils/schemas';
+import { Board } from '../models/board.model';
+import { User } from '../models/user.model';
+import { Invite } from '../models/invite.model';
+import { boardNameSchema } from '../utils/schemas.utils';
 import { requireAuth } from '../middlewares/requireAuth';
 
 

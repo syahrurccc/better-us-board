@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { acceptBodySchema, objectId } from '../utils/schemas';
-import { Board } from '../models/board';
-import { User } from '../models/user';
-import { Invite } from '../models/invite';
+import { acceptBodySchema, objectId } from '../utils/schemas.utils';
+import { Board } from '../models/board.model';
+import { User } from '../models/user.model';
+import { Invite } from '../models/invite.model';
 import { requireAuth } from '../middlewares/requireAuth';
 
 const router = Router();
