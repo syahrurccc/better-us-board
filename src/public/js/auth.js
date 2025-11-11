@@ -40,7 +40,7 @@ async function register(event) {
       throw new Error(error);
     }
 
-    window.location.href = "/login";
+    location.href = "/login";
     return;
   } catch (e) {
     errorHandler("register", e.message);
@@ -89,8 +89,6 @@ function errorHandler(origin, err) {
   p.textContent = msg;
 
   const header = qs(origin === "login" ? "#loginHeader" : "#registerHeader");
-  console.log(header);
-  if (!header) return console.error("Header not found for", origin);
   
   header.querySelector("p.text-red-500")?.remove();
   header.append(p);

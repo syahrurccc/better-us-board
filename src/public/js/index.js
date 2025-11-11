@@ -4,6 +4,7 @@ const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 document.addEventListener("DOMContentLoaded", () => {
   fetchBoard();
   fetchInvites();
+
   qs("#logoutBtn").addEventListener("click", () => logout());
   qs("#inviteForm")?.addEventListener("submit", invite);
   qs("#userMenuBtn")?.addEventListener("click", () => toggleMenu());
@@ -26,14 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
 
 function toggleMenu() {
   const menu = qs("#userMenu");
@@ -260,23 +253,34 @@ function buildTicketCards(ticket) {
 
 async function loadTicket(ticketId) {
   try {
-    const res = await fetch(`/tickets/${ticketId}`, {
-      method: "GET",
-      credentials: "include",
-    });
-    const data = await res.json();
+    const [ticketRes, commentRes] = await Promise.all([
+      fetch(`/tickets/${ticketId}`, { credentials: "include" }),
+      fetch(`/tickets/${ticketId}/comments?page=1`, { credentials: "include" }),
+    ]);
 
-    if (!res.ok) throw new Error(data.error);
+    const ticketJSON = await ticketRes.json();
+    const commentsJSON = await commentRes.json();
 
-    const { ticket, comments, isAuthor } = data;
+    if (!ticketRes.ok) throw new Error(ticketJSON.error);
+    if (!commentRes.ok) throw new Error(commentsJSON.error);
+
+    const { ticket, isAuthor } = ticketJSON;
     const isArchived = ticket.archived;
 
     qs("#activeBoard").classList.add("hidden");
     qs("#ticketView").classList.remove("hidden");
 
+    const formatTicketDate = (date) => {
+      return new Date(date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    };
+
     qs("#ticketTitle").textContent = ticket.title;
     qs("#ticketIssuer").textContent = ticket.authorId.name;
-    qs("#ticketDate").textContent = formatDate(ticket.createdAt);
+    qs("#ticketDate").textContent = formatTicketDate(ticket.createdAt);
     qs("#ticketDescription p").textContent = ticket.description || "";
     qs("#ticketCategory").textContent = capitalize(ticket.category);
     const priority = ticket.priority;
@@ -287,12 +291,8 @@ async function loadTicket(ticketId) {
       return "h-3 w-3 rounded-full bg-green-400";
     };
     qs("#ticketPriorityDot").classList = getPriorityClasses(priority);
-
-    const commentList = qs("#commentsList");
-    comments.forEach((c) => {
-      const comment = renderComment(c);
-      commentList.append(comment);
-    });
+    qs("#commentForm").reset();
+    renderComment(ticketId, commentsJSON);
 
     qs("#modifyButtons").classList.toggle("hidden", !isAuthor);
     qs("#archiveTicket").textContent = isArchived ? "Unarchive" : "Archive";
@@ -310,21 +310,62 @@ async function loadTicket(ticketId) {
       deleteTicket(ticket._id, isArchived),
     );
   } catch (e) {
-    console.log(e.message);
+    showAlert("error", e.message);
   }
 }
 
-function renderComment(c) {
-  const comment = document.createElement("li");
-  comment.className = "border-t border-black/10 pt-4";
-  comment.innerHTML`
-    <div class="flex items-baseline justify-between">
-        <p class="font-medium">${c.authorId.name}</p>
-        <time class="text-xs text-gray-600">${formatDate(c.createdAt)}</time>
-    </div>
-    <p class="mt-1 text-lg italic">${c.body}</p>`;
+function renderComment(ticketId, commentsJSON) {
+  const { items, nextPage, total, hasNextPage } = commentsJSON;
+  const commentList = qs("#commentsList");
 
-  return comment;
+  const formatCommentDate = (date) => {
+    const d = new Date(date);
+    const day = d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    });
+    const time = d.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${day} at ${time}`;
+  };
+
+  items.forEach((c) => {
+    const comment = document.createElement("li");
+    comment.className = "border-t border-black/10 pt-4";
+    comment.innerHTML = `
+      <div class="flex items-baseline justify-between">
+          <p class="font-medium">${c.authorId.name}</p>
+          <time class="text-xs text-gray-600">${formatCommentDate(c.createdAt)}</time>
+      </div>
+      <p class="mt-1 text-lg italic">${c.body}</p>`;
+
+    commentList.append(comment);
+  });
+
+  const moreBtn = qs("#loadMoreComments");
+  moreBtn.classList.toggle("hidden", !hasNextPage);
+
+  if (hasNextPage) {
+    moreBtn.textContent = `Load +${total} More Comments`;
+  }
+
+  moreBtn.addEventListener("click", () => loadMoreComments(ticketId, nextPage));
+}
+
+async function loadMoreComments(ticketId, nextPage) {
+  try {
+    const res = await fetch(`/tickets/${ticketId}/comments?page=${nextPage}`, {
+      credentials: "include",
+    });
+    const commentsJSON = await res.json();
+    if (!res.ok) throw new Error(commentsJSON.error);
+    
+    renderComment(ticketId, commentsJSON);
+  } catch (e) {
+    showAlert("error", e.message);
+  }
 }
 
 async function sendComment(event, ticketId) {
@@ -337,7 +378,7 @@ async function sendComment(event, ticketId) {
   if (!payload.body) return;
 
   try {
-    const res = await fetch(`/${ticketId}/comments`, {
+    const res = await fetch(`/tickets/${ticketId}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -347,11 +388,13 @@ async function sendComment(event, ticketId) {
     if (!res.ok) throw new Error(result.error);
 
     const { comment } = result;
+    qs("#commentForm").reset();
     const li = renderComment(comment);
 
     qs("#commentsList").append(li);
   } catch (e) {
-    console.log(e);
+    console.error(e.message);
+    showAlert("error", e.message);
   }
 }
 
@@ -423,17 +466,17 @@ async function deleteTicket(ticketId) {
 async function archiveTicket(ticketId, isArchived) {
   try {
     const res = await fetch(`/tickets/${ticketId}/archive`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ archived: !isArchived }),
     });
     const result = await res.json();
     if (!res.ok) throw new Error(result.error);
-    
+
     showAlert("success", result.message);
   } catch (e) {
-    showAlert("error", e.message)
+    showAlert("error", e.message);
   }
 }
 
