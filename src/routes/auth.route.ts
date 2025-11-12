@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import { User } from "../models/user.model";
-import { registerSchema, loginSchema } from "../utils/schemas.utils";
+import { registerSchema, loginSchema } from "../validations/zodSchemas";
 
 const router = Router();
 

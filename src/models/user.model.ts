@@ -1,6 +1,10 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, type HydratedDocument } from "mongoose";
 
-const userSchema = new Schema({
+import type { UserType } from "../validations/interfaces";
+
+export type UserDoc = HydratedDocument<UserType>;
+
+const userSchema = new Schema<UserType>({
   name: { 
     type: String, 
     required: true 
@@ -16,10 +20,10 @@ const userSchema = new Schema({
     required: true
   },
   partnerId: { 
-    type: mongoose.SchemaTypes.ObjectId, 
+    type: Schema.Types.ObjectId, 
     ref: 'User', 
     default: null 
   }
 });
 
-export const User = mongoose.model('User', userSchema);
+export const User = model<UserType>("User", userSchema);

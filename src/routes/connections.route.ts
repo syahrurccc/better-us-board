@@ -1,17 +1,19 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { acceptBodySchema, objectId } from "../utils/schemas.utils";
+import { acceptBodySchema, objectId } from "../validations/zodSchemas";
 import { Board } from "../models/board.model";
-import { User } from "../models/user.model";
 import { Invite } from "../models/invite.model";
+import { Ticket } from "../models/ticket.model";
+import { User, type UserDoc } from "../models/user.model";
 import { requireAuth } from "../middlewares/requireAuth";
+import type { Types } from "mongoose";
 
 const router = Router();
 
-router.post("/invite", requireAuth, async (req, res, next) => {
+router.post("/invite", requireAuth, async (req, res) => {
   const inviter = await User.findById(req.userId).lean();
-  if (!inviter) return res.status(404).json({ error: "Inviter not found" });
+  if (!inviter) return res.status(404).json({ error: "Inviter is not registered" });
 
   if (inviter.partnerId) {
     return res.status(403).json({ error: "You already have a partner" });
@@ -29,7 +31,7 @@ router.post("/invite", requireAuth, async (req, res, next) => {
   }
 
   const exists = await Invite.exists({
-    inviterId: req.userId,
+    inviterId: inviter._id,
     inviteeId: invitee._id,
   });
   if (exists) {
@@ -44,7 +46,7 @@ router.post("/invite", requireAuth, async (req, res, next) => {
   return res.status(201).json({ message: "Invite sent" });
 });
 
-router.get("/requests", requireAuth, async (req, res, next) => {
+router.get("/requests", requireAuth, async (req, res) => {
   const invites = await Invite.find({
     inviteeId: req.userId,
     status: "pending",
@@ -55,7 +57,7 @@ router.get("/requests", requireAuth, async (req, res, next) => {
   return res.status(200).json(invites);
 });
 
-router.post("/respond", requireAuth, async (req, res, next) => {
+router.post("/respond", requireAuth, async (req, res) => {
   const { inviteId, response } = acceptBodySchema.parse(req.body);
 
   const invite = await Invite.findById(inviteId);
@@ -105,24 +107,33 @@ router.post("/respond", requireAuth, async (req, res, next) => {
   return res.status(202).json({ message: "Invite accepted" });
 });
 
-router.post("/break", requireAuth, async (req, res, next) => {
+router.post("/break", requireAuth, async (req, res) => {
   const user = await User.findById(req.userId);
   if (!user) return res.status(401).json({ error: "Invalid user" });
 
   const partnerId = objectId.parse(req.body.partnerId);
 
   const partner = await User.findById(partnerId);
-  if (!partner)
+  if (!partner) {
     return res.status(404).json({ error: "Partner account does not exist" });
+  }
+  
+  const userP = user.partnerId as Types.ObjectId;
+  const partnerP = partner.partnerId as Types.ObjectId;
 
   if (
-    !user.partnerId.equals(partnerId) ||
-    !partner.partnerId.equals(user._id)
+    !userP.equals(partner._id) ||
+    !partnerP.equals(user._id)
   ) {
     return res.status(400).json({ error: "You are not this user's partner" });
   }
 
+  const board = await Board.findOne({ userIds: [user._id, partner._id] });
+  if (!board) return res.status(404).json({ error: "Board not found" });
+
   await Promise.all([
+    board.deleteOne(),
+    Ticket.deleteMany({ boardId: board._id }),
     user.updateOne({ partnerId: null }),
     partner.updateOne({ partnerId: null }),
   ]);

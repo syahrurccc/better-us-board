@@ -189,7 +189,7 @@ async function renderActiveBoard(board) {
 
   const cards = {
     open: qs("#openTickets"),
-    in_progress: qs("#in_progressTickets"),
+    in_talks: qs("#in_talksTickets"),
     need_reflection: qs("#needs_reflectionTickets"),
     resolved: qs("#resolvedTickets"),
   };
@@ -482,7 +482,7 @@ async function archiveTicket(ticketId, isArchived) {
 
 async function logout() {
   const res = await fetch("/auth/logout");
-  if (res.ok) window.location.href = "/";
+  if (res.ok) location.href = "/";
 }
 
 function showAlert(type, message) {

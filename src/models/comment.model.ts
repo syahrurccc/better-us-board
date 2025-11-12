@@ -1,15 +1,23 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, type HydratedDocument } from "mongoose";
 
-const commentSchema = new Schema({
-  ticketId: { 
-    type: mongoose.SchemaTypes.ObjectId, 
-    ref: 'Ticket', 
-    index: true },
-  authorId: { 
-    type: mongoose.SchemaTypes.ObjectId, 
-    ref: 'User' 
+import type { CommentType } from "../validations/interfaces";
+
+export type CommentDoc = HydratedDocument<CommentType>;
+
+const commentSchema = new Schema(
+  {
+    ticketId: {
+      type: Schema.Types.ObjectId,
+      ref: "Ticket",
+      index: true,
+    },
+    authorId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    body: String,
   },
-  body: String,
-}, { timestamps: true });
+  { timestamps: true },
+);
 
-export const Comment = mongoose.model('Comment', commentSchema);
+export const Comment = model<CommentType>("Comment", commentSchema);

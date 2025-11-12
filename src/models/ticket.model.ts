@@ -1,15 +1,20 @@
-import mongoose, { Schema } from "mongoose";
-import { categories, statuses, priorities } from "../utils/schemas.utils";
+import { Schema, model, type HydratedDocument } from "mongoose";
+
+import { categories, priorities, statuses } from "../validations/constants";
+import type { TicketType } from "../validations/interfaces";
+
+export type TicketDoc = HydratedDocument<TicketType>;
 
 const ticketSchema = new Schema(
   {
     boardId: {
-      type: mongoose.SchemaTypes.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Board",
       index: true,
+      required: true
     },
     authorId: {
-      type: mongoose.SchemaTypes.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -45,7 +50,6 @@ const ticketSchema = new Schema(
 );
 
 ticketSchema.index({ boardId: 1, status: 1 });
-ticketSchema.index({ boardId: 1, priority: 1 });
-ticketSchema.index({ boardId: 1, category: 1 });
+ticketSchema.index({ boardId: 1, archived: 1 });
 
-export const Ticket = mongoose.model("Ticket", ticketSchema);
+export const Ticket = model<TicketType>("Ticket", ticketSchema);

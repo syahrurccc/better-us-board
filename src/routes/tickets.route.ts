@@ -1,33 +1,22 @@
 import { Router, type Request } from "express";
 import { z } from "zod";
-import type { FilterQuery } from "mongoose";
+import type { FilterQuery, HydratedDocument, Types } from "mongoose";
 
 import { Board } from "../models/board.model";
 import { Comment } from "../models/comment.model";
 import { Ticket } from "../models/ticket.model";
 import { requireAuth } from "../middlewares/requireAuth";
+import { statuses } from "../validations/constants";
+import { verifyReqAndTicket } from "../utils/utils";
 import {
   ticketSchema,
   ticketPatchSchema,
   ticketQuerySchema,
-  statuses,
-  objectId,
-} from "../utils/schemas.utils";
+} from "../validations/zodSchemas";
 
 const router = Router();
 
-async function findTicket(id: String) {
-  const ticketId = objectId.parse(id);
-  const ticket = await Ticket.findById(ticketId);
-  if (!ticket) {
-    const err = new Error("Ticket does not exists");
-    (err as any).status = 404;
-    throw err;
-  }
-  return ticket;
-}
-
-router.get("/", requireAuth, async (req, res, next) => {
+router.get("/", requireAuth, async (req, res) => {
   const board = await Board.findOne({ userIds: req.userId }).lean();
   if (!board) return res.status(404).json({ error: "User has no board" });
 
@@ -62,9 +51,12 @@ router.get("/", requireAuth, async (req, res, next) => {
   res.status(200).json(tickets);
 });
 
-router.post("/", requireAuth, async (req, res, next) => {
+router.post("/", requireAuth, async (req, res) => {
   const board = await Board.findOne({ userIds: req.userId }).lean();
-  if (!board) return res.status(303).redirect("/board");
+  if (!board)
+    return res
+      .status(404)
+      .json({ error: "You don't have a board, yet. Try refresh the page" });
 
   const ticket = ticketSchema.parse(req.body);
 
@@ -86,63 +78,43 @@ router.post("/", requireAuth, async (req, res, next) => {
   return res.status(201).json({ message: "Ticket created" });
 });
 
-router.get("/:id", requireAuth, async (req, res, next) => {
-  const ticketId = objectId.parse(req.params.id);
-
-  const ticket = await Ticket.findById(ticketId)
-    .populate("authorId", "name")
-    .lean();
-  if (!ticket) return res.status(404).json({ error: "Ticket not found" });
-
-  const isAuthor = ticket.authorId._id.toString() === req.userId;
+router.get("/:id", requireAuth, async (req: Request<{ id: string }>, res) => {
+  const { ticket, isAuthor } = await verifyReqAndTicket(req);
+  await ticket.populate("authorId", "name");
 
   return res.status(200).json({ ticket, isAuthor });
 });
 
-router.patch(
-  "/:id",
-  requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
+router.patch("/:id", requireAuth, async (req: Request<{ id: string }>, res) => {
+  const { ticket } = await verifyReqAndTicket(req);
 
-    if (ticket.authorId.toString() !== req.userId) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to edit this ticket" });
-    }
+  const data = ticketPatchSchema.parse(req.body);
 
-    const data = ticketPatchSchema.parse(req.body);
+  // This is a short-circuit evaluation
+  // A && B → returns A if A is falsy, otherwise returns B.
+  // A || B → returns A if A is truthy, otherwise returns B.
+  // ...() → spreads object’s fields or skips false.
+  const editedTicket = await ticket.updateOne(
+    {
+      ...(data.title && { title: data.title }),
+      ...(data.description && { description: data.description }),
+      ...(data.category && { category: data.category }),
+      ...(data.priority && { priority: data.priority }),
+      ...(data.archived && { archived: data.archived }),
+    },
+    { new: true },
+  );
 
-    // This is a short-circuit evaluation
-    // A && B → returns A if A is falsy, otherwise returns B.
-    // A || B → returns A if A is truthy, otherwise returns B.
-    // ...() → spreads object’s fields or skips false.
-    const editedTicket = await ticket.updateOne(
-      {
-        ...(data.title && { title: data.title }),
-        ...(data.description && { description: data.description }),
-        ...(data.category && { category: data.category }),
-        ...(data.priority && { priority: data.priority }),
-        ...(data.archived && { archived: data.archived }),
-      },
-      { new: true },
-    );
-
-    return res.status(200).json(editedTicket);
-  },
-);
+  return res.status(200).json(editedTicket);
+});
 
 router.delete(
   "/:id",
   requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
-
-    if (ticket.authorId.toString() !== req.userId) {
-      return res.status(403).json({
-        error: "Not authorized to delete this ticket",
-      });
-    }
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
+    
+    await Comment.find({ ticketId: ticket._id }).deleteMany();
     await ticket.deleteOne();
 
     res.status(200).json({ message: "Ticket deleted" });
@@ -152,11 +124,13 @@ router.delete(
 router.patch(
   "/:id/resolve",
   requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
+    
     if (ticket.status === "resolved") {
       return res.status(409).json({ error: "Ticket is already resolved" });
     }
+
     await ticket.updateOne({ status: "needs_reflection" });
     return res.status(200).json({
       message: "Ticket needs reflection from both side to mark it as resolved",
@@ -164,11 +138,26 @@ router.patch(
   },
 );
 
+router.post(
+  "/:id/reflect",
+  requireAuth,
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
+    
+    if (ticket.status !== "needs_reflection") {
+      return res.status(400).json({
+        error: "The ticket is in the wrong status for writing reflections",
+      });
+    }
+  },
+);
+
 router.patch(
   "/:id/archive",
   requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
+    
     const unarchiving = ticket.archived === true;
     await ticket.updateOne({ archived: !ticket.archived });
     return res.status(200).json({
@@ -180,8 +169,9 @@ router.patch(
 router.get(
   "/:id/comments",
   requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
+    
     const page = z.coerce
       .number()
       .int()
@@ -206,7 +196,7 @@ router.get(
     return res.status(200).json({
       items,
       nextPage: p + 1,
-      total: (total - (p * limit)),
+      total: total - p * limit,
       hasNextPage: p * limit < total,
     });
   },
@@ -215,8 +205,8 @@ router.get(
 router.post(
   "/:id/comments",
   requireAuth,
-  async (req: Request<{ id: string }>, res, next) => {
-    const ticket = await findTicket(req.params.id);
+  async (req: Request<{ id: string }>, res) => {
+    const { ticket } = await verifyReqAndTicket(req);
 
     const body = z.string().min(1).trim().parse(req.body.body);
 
@@ -228,7 +218,7 @@ router.post(
     await comment.populate("authorId", "name");
 
     if (ticket.status === "open" && ticket.authorId.toString() !== req.userId) {
-      await ticket.updateOne({ status: "in_progress" });
+      await ticket.updateOne({ status: "in_talks" });
     }
 
     console.log(comment);

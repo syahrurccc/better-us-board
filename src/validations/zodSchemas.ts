@@ -1,22 +1,5 @@
 import { z } from "zod";
-
-export const categories = [
-  "communication",
-  "relationship",
-  "household",
-  "finance",
-  "wellbeing",
-  "other",
-] as const;
-
-export const priorities = ["low", "medium", "high"] as const;
-
-export const statuses = [
-  "open",
-  "in_progress",
-  "needs_reflection",
-  "resolved",
-] as const;
+import { categories, priorities, statuses } from "./constants";
 
 export const objectId = z
   .string()

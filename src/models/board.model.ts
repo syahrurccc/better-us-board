@@ -1,21 +1,31 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model, type HydratedDocument } from "mongoose";
 
-const boardSchema = new Schema({
-  name: {
-    type: String,
-    default: 'Our Board'
+import type { BoardType } from "../validations/interfaces";
+
+export type BoardDoc = HydratedDocument<BoardType>;
+
+const boardSchema = new Schema(
+  {
+    name: {
+      type: String,
+      default: "Our Board",
+    },
+    userIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        validate: {
+          validator: (v: Schema.Types.ObjectId[]) => v.length <= 2,
+          message: "A board can only have 2 users",
+        },
+      },
+    ],
   },
-  userIds: [{
-    type: mongoose.SchemaTypes.ObjectId,
-    ref: 'User'
-  }],
-}, {
-  timestamps: true
-});
-
-boardSchema.index(
-  { userIds: 1 }, 
-  { unique: true }
+  {
+    timestamps: true,
+  },
 );
 
-export const Board = mongoose.model('Board', boardSchema);
+boardSchema.index({ userIds: 1 }, { unique: true });
+
+export const Board = model<BoardType>("Board", boardSchema);
