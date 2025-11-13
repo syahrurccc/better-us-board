@@ -5,21 +5,27 @@ export const objectId = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectId");
 
-const asArray = <T extends readonly string[]>(choices: T) =>
+export const bodySchema = z.string().min(1).trim();
+
+const asString = <T extends readonly string[]>(choices: T) =>
   z.preprocess(
     (v) => {
       if (v == null || v === "") return undefined;
-      const arr = Array.isArray(v) ? v : [v];
-      return arr.map((s) => String(s).trim().toLowerCase());
+      if (Array.isArray(v)) {
+        if (v.length > 1) {
+          throw new Error("Only one value allowed for this query parameter");
+        }
+        v = v[0];
+      }
+      return String(v).trim().toLowerCase();
     },
-    z.array(z.enum(choices)).nonempty().optional(),
+    z.enum(choices).optional()
   );
+
 
 export const ticketQuerySchema = z
   .object({
-    category: asArray(categories),
-    priority: asArray(priorities),
-    status: asArray(statuses),
+    status: asString(statuses),
     archived: z.coerce.boolean().optional(),
   })
   .strict();

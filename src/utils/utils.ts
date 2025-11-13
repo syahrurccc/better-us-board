@@ -1,11 +1,27 @@
-import { Ticket } from "../models/ticket.model";
+import { Ticket, type TicketDoc } from "../models/ticket.model";
+import type { TicketType } from "../validations/interfaces";
 import { objectId } from "../validations/zodSchemas";
 
-import { Types } from "mongoose";
+import { Types, type FilterQuery } from "mongoose";
 import type { BoardDoc } from "../models/board.model";
 import type { Request } from "express";
-import type { TicketDoc } from "../models/ticket.model";
 import type { AuthedRequest } from "../validations/interfaces";
+
+export async function queryTickets(
+  filter: FilterQuery<typeof Ticket>
+): Promise<TicketType[]> {
+  const tickets = await Ticket.find(filter, {
+    category: 0,
+    description: 0,
+    createdAt: 0,
+  })
+    .populate("authorId", "name")
+    .sort({ createdAt: -1 })
+    .lean()
+    .exec();
+
+  return tickets;
+}
 
 export function assertAuth(req: Request): asserts req is AuthedRequest {
   if (!req.userId) {
@@ -17,7 +33,7 @@ export function assertAuth(req: Request): asserts req is AuthedRequest {
 
 export async function verifyTicket(req: Request): Promise<TicketDoc> {
   const ticketId = objectId.parse(req.params.id);
-  const ticket = await Ticket.findById(ticketId).populate("boardId", "userIds");
+  const ticket = await Ticket.findById(ticketId).populate("boardId", "userIds").exec();
   if (!ticket) {
     const err = new Error("Ticket not found");
     (err as any).status = 404;

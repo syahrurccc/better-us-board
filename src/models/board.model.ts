@@ -4,7 +4,7 @@ import type { BoardType } from "../validations/interfaces";
 
 export type BoardDoc = HydratedDocument<BoardType>;
 
-const boardSchema = new Schema(
+const boardSchema = new Schema<BoardType>(
   {
     name: {
       type: String,

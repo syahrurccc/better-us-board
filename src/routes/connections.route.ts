@@ -5,7 +5,7 @@ import { acceptBodySchema, objectId } from "../validations/zodSchemas";
 import { Board } from "../models/board.model";
 import { Invite } from "../models/invite.model";
 import { Ticket } from "../models/ticket.model";
-import { User, type UserDoc } from "../models/user.model";
+import { User } from "../models/user.model";
 import { requireAuth } from "../middlewares/requireAuth";
 import type { Types } from "mongoose";
 
@@ -13,7 +13,8 @@ const router = Router();
 
 router.post("/invite", requireAuth, async (req, res) => {
   const inviter = await User.findById(req.userId).lean();
-  if (!inviter) return res.status(404).json({ error: "Inviter is not registered" });
+  if (!inviter)
+    return res.status(404).json({ error: "Inviter is not registered" });
 
   if (inviter.partnerId) {
     return res.status(403).json({ error: "You already have a partner" });
@@ -117,14 +118,11 @@ router.post("/break", requireAuth, async (req, res) => {
   if (!partner) {
     return res.status(404).json({ error: "Partner account does not exist" });
   }
-  
+
   const userP = user.partnerId as Types.ObjectId;
   const partnerP = partner.partnerId as Types.ObjectId;
 
-  if (
-    !userP.equals(partner._id) ||
-    !partnerP.equals(user._id)
-  ) {
+  if (!userP.equals(partner._id) || !partnerP.equals(user._id)) {
     return res.status(400).json({ error: "You are not this user's partner" });
   }
 

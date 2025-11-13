@@ -4,7 +4,7 @@ import type { ReflectionType } from "../validations/interfaces";
 
 export type ReflectionDoc = HydratedDocument<ReflectionType>;
 
-const reflectionSchema = new Schema(
+const reflectionSchema = new Schema<ReflectionType>(
   {
     ticketId: {
       type: Schema.Types.ObjectId,

@@ -4,7 +4,7 @@ import type { CommentType } from "../validations/interfaces";
 
 export type CommentDoc = HydratedDocument<CommentType>;
 
-const commentSchema = new Schema(
+const commentSchema = new Schema<CommentType>(
   {
     ticketId: {
       type: Schema.Types.ObjectId,

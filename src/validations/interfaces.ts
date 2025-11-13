@@ -5,6 +5,8 @@ import type { Category, Priority, Status } from "./constants";
 import type { BoardDoc } from "../models/board.model";
 import type { UserDoc } from "../models/user.model";
 
+// TODO: FIX INTERFACES TYPES TO BE MORE GENERIC
+
 interface Timestamps {
   createdAt: Date;
   updatedAt: Date;
@@ -37,7 +39,7 @@ export interface TicketType extends Timestamps {
   boardId: Types.ObjectId | BoardDoc;
   authorId: Types.ObjectId | UserDoc;
   title: string;
-  description: string;
+  description: string | null;
   category: Category;
   priority: Priority;
   status: Status;

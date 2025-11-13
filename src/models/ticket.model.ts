@@ -5,7 +5,7 @@ import type { TicketType } from "../validations/interfaces";
 
 export type TicketDoc = HydratedDocument<TicketType>;
 
-const ticketSchema = new Schema(
+const ticketSchema = new Schema<TicketType>(
   {
     boardId: {
       type: Schema.Types.ObjectId,
@@ -49,7 +49,7 @@ const ticketSchema = new Schema(
   { timestamps: true },
 );
 
-ticketSchema.index({ boardId: 1, status: 1 });
-ticketSchema.index({ boardId: 1, archived: 1 });
+ticketSchema.index({ boardId: 1, status: 1, createdAt: -1 });
+ticketSchema.index({ boardId: 1, archived: 1, createdAt: -1 });
 
 export const Ticket = model<TicketType>("Ticket", ticketSchema);
