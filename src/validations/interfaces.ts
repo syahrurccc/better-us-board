@@ -2,10 +2,8 @@ import type { Types } from "mongoose";
 import type { Request } from "express";
 
 import type { Category, Priority, Status } from "./constants";
-import type { BoardDoc } from "../models/board.model";
+import type { TicketDoc } from "../models/ticket.model";
 import type { UserDoc } from "../models/user.model";
-
-// TODO: FIX INTERFACES TYPES TO BE MORE GENERIC
 
 interface Timestamps {
   createdAt: Date;
@@ -14,7 +12,7 @@ interface Timestamps {
 
 export interface BoardType extends Timestamps {
   name: string;
-  userIds: (Types.ObjectId | UserDoc)[];
+  userIds: (Types.ObjectId | UserType)[];
 }
 
 export interface CommentType extends Timestamps {
@@ -24,8 +22,8 @@ export interface CommentType extends Timestamps {
 }
 
 export interface InviteType extends Timestamps {
-  inviterId: Types.ObjectId | UserDoc;
-  inviteeId: Types.ObjectId | UserDoc;
+  inviterId: Types.ObjectId | UserType;
+  inviteeId: Types.ObjectId | UserType;
   status: "pending" | "accepted";
 }
 
@@ -36,8 +34,8 @@ export interface ReflectionType extends Timestamps {
 }
 
 export interface TicketType extends Timestamps {
-  boardId: Types.ObjectId | BoardDoc;
-  authorId: Types.ObjectId | UserDoc;
+  boardId: Types.ObjectId | BoardType;
+  authorId: Types.ObjectId | UserType | UserDoc;
   title: string;
   description: string | null;
   category: Category;
@@ -50,7 +48,15 @@ export interface UserType extends Document {
   name: string;
   email: string;
   password: string;
-  partnerId: Types.ObjectId | UserDoc | null;
+  partnerId: Types.ObjectId | UserType | null;
 }
+
+export type PaginatedTickets = {
+  items: TicketType[];
+  nextPage: number;
+  total: number;
+  hasNextPage: boolean;
+};
+
 
 export type AuthedRequest<P = any> = Request<P> & { userId: string };

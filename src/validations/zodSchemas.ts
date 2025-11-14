@@ -8,20 +8,16 @@ export const objectId = z
 export const bodySchema = z.string().min(1).trim();
 
 const asString = <T extends readonly string[]>(choices: T) =>
-  z.preprocess(
-    (v) => {
-      if (v == null || v === "") return undefined;
-      if (Array.isArray(v)) {
-        if (v.length > 1) {
-          throw new Error("Only one value allowed for this query parameter");
-        }
-        v = v[0];
+  z.preprocess((v) => {
+    if (v == null || v === "") return undefined;
+    if (Array.isArray(v)) {
+      if (v.length > 1) {
+        throw new Error("Only one value allowed for this query parameter");
       }
-      return String(v).trim().toLowerCase();
-    },
-    z.enum(choices).optional()
-  );
-
+      v = v[0];
+    }
+    return String(v).trim().toLowerCase();
+  }, z.enum(choices).optional());
 
 export const ticketQuerySchema = z
   .object({
@@ -59,6 +55,8 @@ export const acceptBodySchema = z.object({
   inviteId: objectId,
   response: z.boolean(),
 });
+
+export const pageQSchema = z.coerce.number().int().positive().default(1);
 
 export const registerSchema = z
   .object({

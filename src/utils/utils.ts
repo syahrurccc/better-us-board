@@ -8,19 +8,26 @@ import type { Request } from "express";
 import type { AuthedRequest } from "../validations/interfaces";
 
 export async function queryTickets(
-  filter: FilterQuery<typeof Ticket>
-): Promise<TicketType[]> {
-  const tickets = await Ticket.find(filter, {
-    category: 0,
-    description: 0,
-    createdAt: 0,
-  })
-    .populate("authorId", "name")
-    .sort({ createdAt: -1 })
-    .lean()
-    .exec();
+  filter: FilterQuery<typeof Ticket>,
+  p: number,
+  limit: number,
+): Promise<[TicketType[], number]> {
+  const [tickets, total] = await Promise.all([
+    Ticket.find(filter, {
+      category: 0,
+      description: 0,
+      createdAt: 0,
+    })
+      .sort({ createdAt: -1 })
+      .skip((p - 1) * limit)
+      .limit(limit)
+      .populate("authorId", "name")
+      .lean()
+      .exec(),
+    Ticket.countDocuments(filter).exec(),
+  ]);
 
-  return tickets;
+  return [tickets as TicketType[], total];
 }
 
 export function assertAuth(req: Request): asserts req is AuthedRequest {
@@ -33,7 +40,9 @@ export function assertAuth(req: Request): asserts req is AuthedRequest {
 
 export async function verifyTicket(req: Request): Promise<TicketDoc> {
   const ticketId = objectId.parse(req.params.id);
-  const ticket = await Ticket.findById(ticketId).populate("boardId", "userIds").exec();
+  const ticket = await Ticket.findById(ticketId)
+    .populate("boardId", "userIds")
+    .exec();
   if (!ticket) {
     const err = new Error("Ticket not found");
     (err as any).status = 404;
