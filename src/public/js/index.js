@@ -187,10 +187,10 @@ async function renderActiveBoard(board) {
   qs("#activeBoard").dataset.id = board._id;
   qs("#boardName").textContent = `${board.name}`;
 
-  const cards = {
+  const ticketCardsContainer = {
     open: qs("#openTickets"),
     in_talks: qs("#in_talksTickets"),
-    need_reflection: qs("#needs_reflectionTickets"),
+    needs_reflection: qs("#needs_reflectionTickets"),
     resolved: qs("#resolvedTickets"),
   };
 
@@ -205,53 +205,60 @@ async function renderActiveBoard(board) {
       location.href = "/";
       return;
     }
-    if (tickets.length === 0) return;
 
-    tickets.forEach((t) => {
-      const ticket = buildTicketCards(t);
-      const container = cards[t.status];
+    for (const [status, container] of Object.entries(ticketCardsContainer)) {
+      const entry = tickets[status];
 
-      if (container) {
-        container.append(ticket);
-      } else {
-        console.warn(`No container found for status "${t.status}"`);
-      }
-    });
+      if (!entry) continue;
+
+      renderTicketCards(container, entry);
+    }
   } catch (e) {
     console.error(e.message);
   }
 }
 
-function buildTicketCards(ticket) {
-  const ticketEl = document.createElement("div");
-
+function renderTicketCards(container, entry) {
   const getPriorityClasses = (priority) => {
     if (priority === "high") return "bg-red-400";
     if (priority === "medium") return "bg-yellow-400";
     return "bg-green-400";
   };
-  ticketEl.className = [
-    "rounded-xl border border-black/10",
-    "bg-white p-4 shadow-sm",
-    "hover:shadow-lg hover:cursor-pointer hover:scale-103",
-    "transition duration-150 ease-in-out",
-  ].join(" ");
-  ticketEl.innerHTML = `
-    <p class="text-base font-semibold">${ticket.title}</p>
-      <div class="mt-3 flex items-center justify-between text-sm text-gray-700">
-          <span>issued by: <span class="font-medium">${ticket.authorId.name}</span></span>
-          <span class="flex items-center gap-1">
-          ${capitalize(ticket.priority)}
-          <span class="h-3 w-3 rounded-full ${getPriorityClasses(ticket.priority)}"></span>
-          </span>
-      </div>`;
 
-  ticketEl.addEventListener("click", () => loadTicket(ticket._id));
+  entry.items.forEach((t) => {
+    const ticketEl = document.createElement("div");
+    ticketEl.className = [
+      "rounded-xl border border-black/10",
+      "bg-white p-4 shadow-sm",
+      "hover:shadow-lg hover:cursor-pointer hover:scale-103",
+      "transition duration-150 ease-in-out",
+    ].join(" ");
+    ticketEl.innerHTML = `
+      <p class="text-base font-semibold">${t.title}</p>
+        <div class="mt-3 flex items-center justify-between text-sm text-gray-700">
+            <span>issued by: <span class="font-medium">${t.authorId.name}</span></span>
+            <span class="flex items-center gap-1">
+            ${capitalize(t.priority)}
+            <span class="h-3 w-3 rounded-full ${getPriorityClasses(t.priority)}"></span>
+            </span>
+        </div>`;
 
-  return ticketEl;
+    ticketEl.addEventListener("click", () => renderTicket(t._id));
+    container.append(ticketEl);
+  });
+  
+  // TODO: FIGURE THIS OUT!
+  const moreBtn = qs("");
+  moreBtn.classList.toggle("hidden", !hasNextPage);
+
+  if (hasNextPage) {
+    moreBtn.textContent = `Load +${total} More Comments`;
+  }
+
+  moreBtn.addEventListener("click", () => loadMoreComments(ticketId, nextPage));
 }
 
-async function loadTicket(ticketId) {
+async function renderTicket(ticketId) {
   try {
     const [ticketRes, commentRes] = await Promise.all([
       fetch(`/tickets/${ticketId}`, { credentials: "include" }),
@@ -361,7 +368,7 @@ async function loadMoreComments(ticketId, nextPage) {
     });
     const commentsJSON = await res.json();
     if (!res.ok) throw new Error(commentsJSON.error);
-    
+
     renderComment(ticketId, commentsJSON);
   } catch (e) {
     showAlert("error", e.message);

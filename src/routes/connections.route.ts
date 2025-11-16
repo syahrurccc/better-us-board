@@ -49,7 +49,7 @@ router.post("/invite", requireAuth, async (req, res) => {
   const exists = await Invite.exists({
     inviterId: inviter._id,
     inviteeId: invitee._id,
-  });
+  }).exec();
   if (exists) {
     return res.status(409).json({
       error: "An invite is already pending",

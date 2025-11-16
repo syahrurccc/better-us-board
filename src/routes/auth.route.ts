@@ -18,17 +18,29 @@ router.post("/register", async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
   await User.create({ name, email, password: hash });
 
-  res.status(201).json({ message: "User registered successfully" });
+  res.status(201).json({
+    message: "User registered successfully",
+  });
 });
 
 router.post("/login", async (req, res) => {
   const { email, password } = loginSchema.parse(req.body);
 
-  const user = await User.findOne({ email }).lean().exec();
-  if (!user) return res.status(401).json({ error: "Authentication failed" });
+  const user = await User.findOne({
+    email,
+  })
+    .lean()
+    .exec();
+  if (!user)
+    return res.status(401).json({
+      error: "Authentication failed",
+    });
 
   const pass = await bcrypt.compare(password, user.password);
-  if (!pass) return res.status(401).json({ error: "Authentication failed" });
+  if (!pass)
+    return res.status(401).json({
+      error: "Authentication failed",
+    });
 
   // authorize user
   // TODO: Create a refresh token

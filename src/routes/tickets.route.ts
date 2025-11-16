@@ -1,15 +1,14 @@
 import { Router } from "express";
-import { z } from "zod";
-import type { FilterQuery, Types } from "mongoose";
+import type { FilterQuery } from "mongoose";
 
 import { Board } from "../models/board.model";
 import { Comment } from "../models/comment.model";
-import { Ticket, type TicketDoc } from "../models/ticket.model";
+import { Ticket } from "../models/ticket.model";
 import { Reflection } from "../models/reflection.model";
-import type { PaginatedTickets, TicketType } from "../validations/interfaces";
-import { statuses, type Status } from "../validations/constants";
+import type { TicketsResponse } from "../validations/interfaces";
+import { statuses } from "../validations/constants";
 import { requireAuth } from "../middlewares/requireAuth";
-import { assertAuth, queryTickets, verifyReqAndTicket } from "../utils/utils";
+import { queryTickets, verifyReqAndTicket } from "../utils/utils";
 import {
   bodySchema,
   ticketSchema,
@@ -65,7 +64,7 @@ router.get("/", requireAuth, async (req, res) => {
 
   const entries = await Promise.all(promises);
 
-  const tickets: Partial<Record<Status, PaginatedTickets>> = {};
+  const tickets: TicketsResponse = {};
   for (const [status, items, total] of entries) {
     tickets[status] = {
       items,
@@ -75,7 +74,7 @@ router.get("/", requireAuth, async (req, res) => {
     };
   }
 
-  res.status(200).json();
+  res.status(200).json(tickets);
 });
 
 router.post("/", requireAuth, async (req, res) => {
@@ -86,28 +85,29 @@ router.post("/", requireAuth, async (req, res) => {
     .exec();
   if (!board)
     return res.status(404).json({
-      error: "You don't have a board, yet. Try refreshing the page",
+      error: "Board not found",
     });
 
-  const ticket = ticketSchema.parse(req.body);
+  const ticketInput = ticketSchema.parse(req.body);
 
-  if (board._id.toString() !== ticket.boardId) {
+  if (!board._id.equals(ticketInput.boardId)) {
     return res.status(403).json({
       error: "Not authorized to send ticket to destined board",
     });
   }
 
-  await Ticket.create({
-    boardId: ticket.boardId,
+  const ticket = await Ticket.create({
+    boardId: ticketInput.boardId,
     authorId: req.userId,
-    title: ticket.title,
-    description: ticket.description ?? null,
-    category: ticket.category,
-    priority: ticket.priority,
+    title: ticketInput.title,
+    description: ticketInput.description ?? null,
+    category: ticketInput.category,
+    priority: ticketInput.priority,
   });
 
   return res.status(201).json({
     message: "Ticket created",
+    ticketId: ticket._id
   });
 });
 
@@ -173,7 +173,7 @@ router.patch("/:id/resolve", requireAuth, async (req, res) => {
     })
     .exec();
   return res.status(200).json({
-    message: "Ticket needs reflection from both side to mark it as resolved",
+    message: "Ticket needs reflection from both sides to mark it as resolved",
   });
 });
 

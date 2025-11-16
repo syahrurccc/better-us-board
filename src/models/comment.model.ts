@@ -20,4 +20,6 @@ const commentSchema = new Schema<CommentType>(
   { timestamps: true },
 );
 
+commentSchema.index({ ticketId: 1, createdAt: -1 });
+
 export const Comment = model<CommentType>("Comment", commentSchema);

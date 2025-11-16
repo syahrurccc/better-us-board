@@ -11,7 +11,10 @@ const router = Router();
 
 router.get("/", requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).lean().exec();
-  if (!user) return res.status(401).json({ error: "No user found" });
+  if (!user)
+    return res.status(401).json({
+      error: "No user found",
+    });
 
   const inviteCount = await Invite.countDocuments({
     inviteeId: user._id,
@@ -48,12 +51,18 @@ router.post("/", requireAuth, async (req, res) => {
   const { boardId, boardName } = boardNameSchema.parse(req.body);
 
   const board = await Board.findById(boardId).exec();
-  if (!board) return res.status(404).json({ error: "Board not found" });
+  if (!board)
+    return res.status(404).json({
+      error: "Board not found",
+    });
 
   verifyBoardOwner(board, req.userId);
 
   await board.updateOne({ name: boardName }).exec();
-  return res.status(200).json({ message: "Board name updated" });
+  
+  return res.status(200).json({
+    message: "Board name updated",
+  });
 });
 
 export default router;

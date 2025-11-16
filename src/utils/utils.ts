@@ -1,11 +1,11 @@
+import type { Request } from "express";
+import { Types, type FilterQuery } from "mongoose";
+
+import type { AuthedRequest } from "../validations/interfaces";
+import type { BoardDoc } from "../models/board.model";
+import { objectId } from "../validations/zodSchemas";
 import { Ticket, type TicketDoc } from "../models/ticket.model";
 import type { TicketType } from "../validations/interfaces";
-import { objectId } from "../validations/zodSchemas";
-
-import { Types, type FilterQuery } from "mongoose";
-import type { BoardDoc } from "../models/board.model";
-import type { Request } from "express";
-import type { AuthedRequest } from "../validations/interfaces";
 
 export async function queryTickets(
   filter: FilterQuery<typeof Ticket>,

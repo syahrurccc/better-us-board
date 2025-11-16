@@ -2,7 +2,6 @@ import type { Types } from "mongoose";
 import type { Request } from "express";
 
 import type { Category, Priority, Status } from "./constants";
-import type { TicketDoc } from "../models/ticket.model";
 import type { UserDoc } from "../models/user.model";
 
 interface Timestamps {
@@ -58,5 +57,5 @@ export type PaginatedTickets = {
   hasNextPage: boolean;
 };
 
-
+export type TicketsResponse = Partial<Record<Status, PaginatedTickets>>;
 export type AuthedRequest<P = any> = Request<P> & { userId: string };
