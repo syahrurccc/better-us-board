@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.querySelectorAll(".backToBoard")?.forEach((b) => {
     b.addEventListener("click", () => {
-      console.log("clicked");
       location.href = "/";
     });
   });
@@ -117,12 +116,11 @@ async function respondInvite(id, response) {
       location.href = "/";
     }, 3000);
   } catch (e) {
-    console.log("error", e.message);
+    showAlert("error", e.message);
   }
 }
 
 async function invite(event) {
-  console.log("clicked");
   event.preventDefault();
   const f = event.currentTarget;
   const payload = {
@@ -148,7 +146,6 @@ async function invite(event) {
 }
 
 function setBadge(count) {
-  console.log(`invite count is ${count}`);
   const show = count > 0;
   [qs("#inviteBadge"), qs("#inviteBadgeInside")].forEach((b) => {
     if (!b) return;
@@ -211,21 +208,23 @@ async function renderActiveBoard(board) {
 
       if (!entry) continue;
 
-      renderTicketCards(container, entry);
+      renderTicketCards(status, container, entry);
     }
   } catch (e) {
     console.error(e.message);
   }
 }
 
-function renderTicketCards(container, entry) {
+function renderTicketCards(status, container, entry) {
   const getPriorityClasses = (priority) => {
     if (priority === "high") return "bg-red-400";
     if (priority === "medium") return "bg-yellow-400";
     return "bg-green-400";
   };
+  
+  const { items, nextPage, total, hasNextPage } = entry;
 
-  entry.items.forEach((t) => {
+  items.forEach((t) => {
     const ticketEl = document.createElement("div");
     ticketEl.className = [
       "rounded-xl border border-black/10",
@@ -247,15 +246,16 @@ function renderTicketCards(container, entry) {
     container.append(ticketEl);
   });
   
-  // TODO: FIGURE THIS OUT!
-  const moreBtn = qs("");
+  const moreBtn = document.createElement('button');
+  moreBtn.className = 'mt-4 text-center text-sm font-medium underline-offset-4 hover:underline';
   moreBtn.classList.toggle("hidden", !hasNextPage);
 
   if (hasNextPage) {
     moreBtn.textContent = `Load +${total} More Comments`;
   }
 
-  moreBtn.addEventListener("click", () => loadMoreComments(ticketId, nextPage));
+  moreBtn.addEventListener("click", () => loadMoreTickets(status, nextPage));
+  container.after(moreBtn);
 }
 
 async function renderTicket(ticketId) {
@@ -290,16 +290,19 @@ async function renderTicket(ticketId) {
     qs("#ticketDate").textContent = formatTicketDate(ticket.createdAt);
     qs("#ticketDescription p").textContent = ticket.description || "";
     qs("#ticketCategory").textContent = capitalize(ticket.category);
+    
     const priority = ticket.priority;
     qs("#ticketPriority").textContent = capitalize(priority);
+    
     const getPriorityClasses = (priority) => {
       if (priority === "high") return "h-3 w-3 rounded-full bg-red-400";
       if (priority === "medium") return "h-3 w-3 rounded-full bg-yellow-400";
       return "h-3 w-3 rounded-full bg-green-400";
     };
+    
     qs("#ticketPriorityDot").classList = getPriorityClasses(priority);
     qs("#commentForm").reset();
-    renderComment(ticketId, commentsJSON);
+    loadComments(ticketId, commentsJSON);
 
     qs("#modifyButtons").classList.toggle("hidden", !isAuthor);
     qs("#archiveTicket").textContent = isArchived ? "Unarchive" : "Archive";
@@ -321,10 +324,7 @@ async function renderTicket(ticketId) {
   }
 }
 
-function renderComment(ticketId, commentsJSON) {
-  const { items, nextPage, total, hasNextPage } = commentsJSON;
-  const commentList = qs("#commentsList");
-
+function renderComment(c) {
   const formatCommentDate = (date) => {
     const d = new Date(date);
     const day = d.toLocaleDateString("en-GB", {
@@ -337,17 +337,25 @@ function renderComment(ticketId, commentsJSON) {
     });
     return `${day} at ${time}`;
   };
+  
+  const comment = document.createElement("li");
+  comment.className = "border-t border-black/10 pt-4";
+  comment.innerHTML = `
+    <div class="flex items-baseline justify-between">
+        <p class="font-medium">${c.authorId.name}</p>
+        <time class="text-xs text-gray-600">${formatCommentDate(c.createdAt)}</time>
+    </div>
+    <p class="mt-1 text-lg italic">${c.body}</p>`;
+  
+  return comment;
+}
+
+function loadComments(ticketId, commentsJSON) {
+  const { items, nextPage, total, hasNextPage } = commentsJSON;
+  const commentList = qs("#commentsList");
 
   items.forEach((c) => {
-    const comment = document.createElement("li");
-    comment.className = "border-t border-black/10 pt-4";
-    comment.innerHTML = `
-      <div class="flex items-baseline justify-between">
-          <p class="font-medium">${c.authorId.name}</p>
-          <time class="text-xs text-gray-600">${formatCommentDate(c.createdAt)}</time>
-      </div>
-      <p class="mt-1 text-lg italic">${c.body}</p>`;
-
+    const comment = renderComment(c)
     commentList.append(comment);
   });
 
@@ -369,7 +377,7 @@ async function loadMoreComments(ticketId, nextPage) {
     const commentsJSON = await res.json();
     if (!res.ok) throw new Error(commentsJSON.error);
 
-    renderComment(ticketId, commentsJSON);
+    loadComments(ticketId, commentsJSON);
   } catch (e) {
     showAlert("error", e.message);
   }
@@ -397,8 +405,7 @@ async function sendComment(event, ticketId) {
     const { comment } = result;
     qs("#commentForm").reset();
     const li = renderComment(comment);
-
-    qs("#commentsList").append(li);
+    qs("#commentsList").prepend(li);
   } catch (e) {
     console.error(e.message);
     showAlert("error", e.message);

@@ -1,8 +1,12 @@
-import { Schema, model, type HydratedDocument } from "mongoose";
+import { Schema, model, type HydratedDocument, type Types } from "mongoose";
 
-import type { BoardType } from "../validations/interfaces";
+import type { BoardType, UserType } from "../validations/interfaces";
 
-export type BoardDoc = HydratedDocument<BoardType>;
+export type BoardDoc = HydratedDocument<
+  Omit<BoardType, "userIds"> & {
+    userIds: (Types.ObjectId | UserType)[];
+  }
+>;
 
 const boardSchema = new Schema<BoardType>(
   {
@@ -10,16 +14,16 @@ const boardSchema = new Schema<BoardType>(
       type: String,
       default: "Our Board",
     },
-    userIds: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        validate: {
-          validator: (v: Schema.Types.ObjectId[]) => v.length <= 2,
-          message: "A board can only have 2 users",
+    userIds: {
+      type: [Schema.Types.ObjectId],
+      ref: "User",
+      validate: {
+        validator: function (v: Schema.Types.ObjectId[]) {
+          return v.length <= 2
         },
+        message: "A board can only have 2 users",
       },
-    ],
+    },
   },
   {
     timestamps: true,

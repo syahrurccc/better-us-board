@@ -128,10 +128,16 @@ router.post("/respond", requireAuth, async (req, res) => {
     }).exec(),
   ]);
 
-  await Board.create({
+  const board = await Board.create({
     name: "Our Board",
     userIds: [invite.inviterId, invite.inviteeId],
   });
+  
+  if (!board) {
+    const err = new Error("Failed to initialize board");
+    (err as any).status = 500;
+    throw err;
+  }
 
   return res.status(202).json({
     message: "Invite accepted",

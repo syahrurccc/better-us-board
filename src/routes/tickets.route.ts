@@ -34,7 +34,7 @@ router.get("/", requireAuth, async (req, res) => {
     });
 
   const q = ticketQuerySchema.parse(req.query);
-  const noQuery = Object.keys(q).length === 0;
+  const noQuery = q.status === undefined;
   const archive = q.archived ?? false;
   const page = pageQSchema.parse(req.query.page);
 
@@ -237,8 +237,9 @@ router.post("/:id/comments", requireAuth, async (req, res) => {
   if (isOpen && fromPartner) {
     await ticket.updateOne({ status: "in_talks" }).exec();
   }
+  
+  console.log(comment)
 
-  console.log(comment);
   res.status(201).json({ comment });
 });
 

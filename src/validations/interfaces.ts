@@ -11,7 +11,7 @@ interface Timestamps {
 
 export interface BoardType extends Timestamps {
   name: string;
-  userIds: (Types.ObjectId | UserType)[];
+  userIds: Types.ObjectId[];
 }
 
 export interface CommentType extends Timestamps {
