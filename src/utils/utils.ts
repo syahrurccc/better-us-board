@@ -6,6 +6,13 @@ import type { BoardDoc } from "../models/board.model";
 import { objectId } from "../validations/zodSchemas";
 import { Ticket, type TicketDoc } from "../models/ticket.model";
 import type { TicketType } from "../validations/interfaces";
+import { User } from "../models/user.model";
+
+function throwErr(msg: string, code: number): never {
+  const err = new Error("Unauthorized");
+  (err as any).status = code;
+  throw err;
+}
 
 export async function queryTickets(
   filter: FilterQuery<typeof Ticket>,
@@ -31,11 +38,7 @@ export async function queryTickets(
 }
 
 export function assertAuth(req: Request): asserts req is AuthedRequest {
-  if (!req.userId) {
-    const err = new Error("Unauthorized");
-    (err as any).status = 401;
-    throw err;
-  }
+  if (!req.userId) throwErr("Unauthorized", 401);
 }
 
 export async function verifyTicket(req: Request): Promise<TicketDoc> {
@@ -43,11 +46,8 @@ export async function verifyTicket(req: Request): Promise<TicketDoc> {
   const ticket = await Ticket.findById(ticketId)
     .populate("boardId", "userIds")
     .exec();
-  if (!ticket) {
-    const err = new Error("Ticket not found");
-    (err as any).status = 404;
-    throw err;
-  }
+  
+  if (!ticket) throwErr("Ticket not found", 404);
 
   return ticket;
 }
@@ -55,19 +55,21 @@ export async function verifyTicket(req: Request): Promise<TicketDoc> {
 export function verifyBoardOwner(board: BoardDoc, userId: string) {
   const boardOwners = board.userIds as Types.ObjectId[];
   if (!boardOwners.some((id) => id.equals(userId))) {
-    const err = new Error("User is not authorized to edit this board");
-    (err as any).status = 403;
-    throw err;
+    throwErr("User is not authorized to edit this board", 403);
   }
 }
 
-export function verifyTicketAuthor(ticket: TicketDoc, userId: string): boolean {
-  const author = ticket.authorId as Types.ObjectId;
-  const isAuthor = author.equals(userId);
-  if (!isAuthor) {
-    const err = new Error("User is not authorized to modify this ticket");
-    (err as any).status = 403;
-    throw err;
+export async function verifyTicketAuthor(
+  ticket: TicketDoc, userId: string): Promise<boolean> {
+  const author = await User.findById(ticket.authorId).lean().exec();
+  if (!author) throwErr("User does not exist", 401);
+  const partner = author.partnerId as Types.ObjectId;
+  if (!partner) throwErr("User is not author's partner", 409);
+  
+  const isAuthor = author._id.equals(userId);
+  const isPartner = partner.equals(userId);
+  if (!isAuthor && !isPartner) {
+    throwErr("User is not authorized to modify this ticket", 403);
   }
 
   return isAuthor;
@@ -78,7 +80,7 @@ export async function verifyReqAndTicket(
 ): Promise<{ ticket: TicketDoc; isAuthor: boolean }> {
   assertAuth(req);
   const ticket = await verifyTicket(req);
-  const isAuthor = verifyTicketAuthor(ticket, req.userId);
+  const isAuthor = await verifyTicketAuthor(ticket, req.userId);
   verifyBoardOwner(ticket.boardId as BoardDoc, req.userId);
 
   return { ticket, isAuthor };

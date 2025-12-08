@@ -114,7 +114,7 @@ async function respondInvite(id, response) {
 
     setTimeout(() => {
       location.href = "/";
-    }, 3000);
+    }, 1500);
   } catch (e) {
     showAlert("error", e.message);
   }
@@ -184,78 +184,75 @@ async function renderActiveBoard(board) {
   qs("#activeBoard").dataset.id = board._id;
   qs("#boardName").textContent = `${board.name}`;
 
-  const ticketCardsContainer = {
-    open: qs("#openTickets"),
-    in_talks: qs("#in_talksTickets"),
-    needs_reflection: qs("#needs_reflectionTickets"),
-    resolved: qs("#resolvedTickets"),
-  };
-
   try {
     const res = await fetch("/tickets", {
       method: "GET",
       credentials: "include",
     });
+    
     const tickets = await res.json();
 
-    if (!res.ok) {
-      location.href = "/";
-      return;
-    }
-
-    for (const [status, container] of Object.entries(ticketCardsContainer)) {
-      const entry = tickets[status];
-
-      if (!entry) continue;
-
-      renderTicketCards(status, container, entry);
-    }
+    if (!res.ok) throw new Error(tickets.error);
+    
+    renderTicketCards(tickets);
   } catch (e) {
-    console.error(e.message);
+    showAlert("error", e.message);
   }
 }
 
-function renderTicketCards(status, container, entry) {
+function renderTicketCards(tickets) {
   const getPriorityClasses = (priority) => {
     if (priority === "high") return "bg-red-400";
     if (priority === "medium") return "bg-yellow-400";
     return "bg-green-400";
   };
   
-  const { items, nextPage, total, hasNextPage } = entry;
-
-  items.forEach((t) => {
-    const ticketEl = document.createElement("div");
-    ticketEl.className = [
-      "rounded-xl border border-black/10",
-      "bg-white p-4 shadow-sm",
-      "hover:shadow-lg hover:cursor-pointer hover:scale-103",
-      "transition duration-150 ease-in-out",
-    ].join(" ");
-    ticketEl.innerHTML = `
-      <p class="text-base font-semibold">${t.title}</p>
-        <div class="mt-3 flex items-center justify-between text-sm text-gray-700">
-            <span>issued by: <span class="font-medium">${t.authorId.name}</span></span>
-            <span class="flex items-center gap-1">
-            ${capitalize(t.priority)}
-            <span class="h-3 w-3 rounded-full ${getPriorityClasses(t.priority)}"></span>
-            </span>
-        </div>`;
-
-    ticketEl.addEventListener("click", () => renderTicket(t._id));
-    container.append(ticketEl);
-  });
+  const cardsContainers = {
+    open: qs("#openTickets"),
+    in_talks: qs("#in_talksTickets"),
+    needs_reflection: qs("#needs_reflectionTickets"),
+    resolved: qs("#resolvedTickets"),
+  };
   
-  const moreBtn = document.createElement('button');
-  moreBtn.className = 'mt-4 text-center text-sm font-medium underline-offset-4 hover:underline';
-  moreBtn.classList.toggle("hidden", !hasNextPage);
+  for (const [status, container] of Object.entries(cardsContainers)) {
+    const entry = tickets[status];
 
-  if (hasNextPage) {
-    moreBtn.textContent = `Load +${total} More Comments`;
+    if (!entry) continue;
+    console.log(entry)
+    
+    const { items, nextPage, total, hasNextPage } = entry;
+  
+    items.forEach((t) => {
+      const ticketEl = document.createElement("div");
+      ticketEl.className = [
+        "rounded-xl border border-black/10",
+        "bg-white p-4 shadow-sm",
+        "hover:shadow-lg hover:cursor-pointer hover:scale-103",
+        "transition duration-150 ease-in-out",
+      ].join(" ");
+      ticketEl.innerHTML = `
+        <p class="text-base font-semibold">${t.title}</p>
+          <div class="mt-3 flex items-center justify-between text-sm text-gray-700">
+              <span>issued by: <span class="font-medium">${t.authorId.name}</span></span>
+              <span class="flex items-center gap-1">
+              ${capitalize(t.priority)}
+              <span class="h-3 w-3 rounded-full ${getPriorityClasses(t.priority)}"></span>
+              </span>
+          </div>`;
+  
+      ticketEl.addEventListener("click", () => renderTicket(t._id));
+      container.append(ticketEl);
+    });
+  
+    const moreBtn = qs(`#more-${status}`);
+    moreBtn.classList.toggle("hidden", !hasNextPage);
+  
+    if (hasNextPage) {
+      moreBtn.textContent = `Load +${total} More Tickets`;
+    }
+  
+    moreBtn.addEventListener("click", () => loadMoreTickets(status, nextPage));
   }
-
-  moreBtn.addEventListener("click", () => loadMoreTickets(status, nextPage));
-  container.after(moreBtn);
 }
 
 async function renderTicket(ticketId) {
@@ -290,16 +287,16 @@ async function renderTicket(ticketId) {
     qs("#ticketDate").textContent = formatTicketDate(ticket.createdAt);
     qs("#ticketDescription p").textContent = ticket.description || "";
     qs("#ticketCategory").textContent = capitalize(ticket.category);
-    
+
     const priority = ticket.priority;
     qs("#ticketPriority").textContent = capitalize(priority);
-    
+
     const getPriorityClasses = (priority) => {
       if (priority === "high") return "h-3 w-3 rounded-full bg-red-400";
       if (priority === "medium") return "h-3 w-3 rounded-full bg-yellow-400";
       return "h-3 w-3 rounded-full bg-green-400";
     };
-    
+
     qs("#ticketPriorityDot").classList = getPriorityClasses(priority);
     qs("#commentForm").reset();
     loadComments(ticketId, commentsJSON);
@@ -324,6 +321,21 @@ async function renderTicket(ticketId) {
   }
 }
 
+async function loadMoreTickets(status, nextPage) {
+  try {
+    const res = await fetch(`/tickets?status=${status}&page=${nextPage}`, {
+      credentials: "include",
+    });
+    const tickets = await res.json();
+    
+    if (!res.ok) throw new Error(tickets.error);
+    
+    renderTicketCards(tickets);
+  } catch (e) {
+    showAlert("error", e.message);
+  }
+}
+
 function renderComment(c) {
   const formatCommentDate = (date) => {
     const d = new Date(date);
@@ -337,7 +349,7 @@ function renderComment(c) {
     });
     return `${day} at ${time}`;
   };
-  
+
   const comment = document.createElement("li");
   comment.className = "border-t border-black/10 pt-4";
   comment.innerHTML = `
@@ -346,7 +358,7 @@ function renderComment(c) {
         <time class="text-xs text-gray-600">${formatCommentDate(c.createdAt)}</time>
     </div>
     <p class="mt-1 text-lg italic">${c.body}</p>`;
-  
+
   return comment;
 }
 
@@ -355,7 +367,7 @@ function loadComments(ticketId, commentsJSON) {
   const commentList = qs("#commentsList");
 
   items.forEach((c) => {
-    const comment = renderComment(c)
+    const comment = renderComment(c);
     commentList.append(comment);
   });
 

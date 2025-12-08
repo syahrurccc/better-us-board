@@ -19,10 +19,13 @@ const asString = <T extends readonly string[]>(choices: T) =>
     return String(v).trim().toLowerCase();
   }, z.enum(choices).optional());
 
+export const pageQSchema = z.coerce.number().int().positive().default(1);
+
 export const ticketQuerySchema = z
   .object({
     status: asString(statuses),
     archived: z.coerce.boolean().optional(),
+    page: pageQSchema,
   })
   .strict();
 
@@ -55,8 +58,6 @@ export const acceptBodySchema = z.object({
   inviteId: objectId,
   response: z.boolean(),
 });
-
-export const pageQSchema = z.coerce.number().int().positive().default(1);
 
 export const registerSchema = z
   .object({

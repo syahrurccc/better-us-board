@@ -36,7 +36,7 @@ router.get("/", requireAuth, async (req, res) => {
   const q = ticketQuerySchema.parse(req.query);
   const noQuery = q.status === undefined;
   const archive = q.archived ?? false;
-  const page = pageQSchema.parse(req.query.page);
+  const page = q.page ?? 1;
 
   const p = Math.max(1, page);
   const limit = LIMIT;
